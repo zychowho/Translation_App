@@ -69,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
               Image.asset('assets/logo.png', height: 100),
               SizedBox(height: 20),
               Text(
-                'Sign-in to your account!',
+                '',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
@@ -101,6 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   : ElevatedButton(
                 onPressed: _login,
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.black,
                   padding: EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
@@ -108,14 +109,14 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 child: Text(
                   'Login',
-                  style: TextStyle(fontSize: 16),
+                  style: TextStyle(fontSize: 16, color: Colors.white),
                 ),
               ),
               TextButton(
                 onPressed: () {
-                  // Handle forgot password logic
+                  Navigator.pushNamed(context, '/forgot-password');
                 },
-                child: Text('Forgot Password'),
+                child: Text('Forgot Password', style: TextStyle(color: Colors.black)),
               ),
               SizedBox(height: 20),
               Text.rich(
@@ -126,9 +127,10 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextSpan(
                       text: "Sign up here.",
                       style: TextStyle(color: Colors.blue),
-                      recognizer: TapGestureRecognizer()..onTap = () {
-                        Navigator.pushNamed(context, '/register');
-                      },
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          Navigator.pushNamed(context, '/register');
+                        },
                     ),
                   ],
                 ),

@@ -25,68 +25,50 @@ class _RegisterScreenState extends State<RegisterScreen> {
     final mediaQuery = MediaQuery.of(context);
 
     return Scaffold(
-      body: Stack(
-        children: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
-                child: Column(
+      backgroundColor: Colors.white,
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                // Logo Row
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    // Logo Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Image.asset(
-                          'assets/logo.png',
-                          height: 100,
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: 20), // Add some space between the logo and the container
-
-                    // Registration Form Container
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: mediaQuery.size.width * 0.1),
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(130, 143, 143, 143),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 20),
-                          _buildInputField('NAME', name),
-                          const SizedBox(height: 20),
-                          _buildInputField('EMAIL', email),
-                          const SizedBox(height: 20),
-                          _buildInputField('PASSWORD', password, isPassword: true),
-                          const SizedBox(height: 20),
-                          _buildRegisterButton(mediaQuery),
-                          const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text('Already Have An Account? ', style: TextStyle(color: Colors.white)),
-                              GestureDetector(
-                                child: const Text(
-                                  'Log In',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                ),
-                                onTap: () => Navigator.pop(context),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
+                  children: [
+                    Image.asset(
+                      'assets/logo.png',
+                      height: 100,
                     ),
                   ],
                 ),
-              ),
+                SizedBox(height: 30),
+                _buildInputField('NAME', name),
+                SizedBox(height: 20),
+                _buildInputField('EMAIL', email),
+                SizedBox(height: 20),
+                _buildInputField('PASSWORD', password, isPassword: true),
+                SizedBox(height: 30),
+                _buildRegisterButton(mediaQuery),
+                SizedBox(height: 30),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('Already Have An Account? ', style: TextStyle(color: Colors.black87)),
+                    GestureDetector(
+                      child: Text(
+                        'Log In',
+                        style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                      ),
+                      onTap: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -97,50 +79,44 @@ class _RegisterScreenState extends State<RegisterScreen> {
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 22, color: Colors.white),
+          style: TextStyle(fontSize: 18, color: Colors.black, fontWeight: FontWeight.bold),
         ),
-        Container(
-          padding: const EdgeInsets.only(left: 10),
-          margin: const EdgeInsets.only(top: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: TextField(
-            controller: controller,
-            obscureText: isPassword && _obscureText,
-            decoration: InputDecoration(
-              filled: true,
-              fillColor: Colors.white.withOpacity(0.2),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: BorderSide(
-                  color: Colors.transparent,
-                ),
+        SizedBox(height: 8),
+        TextField(
+          controller: controller,
+          obscureText: isPassword && _obscureText,
+          decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.black.withOpacity(0.1),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Colors.black38,
               ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(20),
-                borderSide: BorderSide(
-                  color: Color(0xFFFFEB3B),
-                  width: 2.0,
-                ),
-              ),
-              border: InputBorder.none,
-              suffixIcon: isPassword
-                  ? IconButton(
-                icon: Icon(
-                  _obscureText ? Icons.visibility : Icons.visibility_off,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  setState(() {
-                    _obscureText = !_obscureText;
-                  });
-                },
-              )
-                  : null,
             ),
-            style: TextStyle(color: Colors.white),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(
+                color: Colors.black,
+                width: 2.0,
+              ),
+            ),
+            border: InputBorder.none,
+            suffixIcon: isPassword
+                ? IconButton(
+              icon: Icon(
+                _obscureText ? Icons.visibility : Icons.visibility_off,
+                color: Colors.black54,
+              ),
+              onPressed: () {
+                setState(() {
+                  _obscureText = !_obscureText;
+                });
+              },
+            )
+                : null,
           ),
+          style: TextStyle(color: Colors.black),
         ),
       ],
     );
@@ -148,7 +124,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _buildRegisterButton(MediaQueryData mediaQuery) {
     return InkWell(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(12),
       onTap: () async {
         // Your validation and registration code
         if (name.text.isEmpty || email.text.isEmpty || password.text.isEmpty) {
@@ -174,15 +150,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               context: context,
               builder: (BuildContext context) {
                 return AlertDialog(
-                  title: const Text('Success'),
-                  content: const Text('Registration successful!'),
+                  title: Text('Success'),
+                  content: Text('Registration successful!'),
                   actions: [
                     TextButton(
                       onPressed: () {
                         Navigator.of(context).pop();
                         Navigator.pushReplacementNamed(context, '/login');
                       },
-                      child: const Text('OK'),
+                      child: Text('OK'),
                     ),
                   ],
                 );
@@ -197,13 +173,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
         height: mediaQuery.size.height * 0.06,
         width: mediaQuery.size.width * 0.5,
         decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 15, 5, 93),
-          borderRadius: BorderRadius.circular(20),
+          color: Colors.black,
+          borderRadius: BorderRadius.circular(12),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
             'REGISTER',
-            style: TextStyle(color: Colors.white, fontSize: 18),
+            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
         ),
       ),
@@ -215,14 +191,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Error'),
+          title: Text('Error'),
           content: Text(message),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              child: const Text('OK'),
+              child: Text('OK'),
             ),
           ],
         );
