@@ -1,97 +1,104 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:google_sign_in/google_sign_in.dart';
+import 'package:translation_app/register/email_verification_screen.dart';
+
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({Key? key}) : super(key: key);
+  const RegisterScreen({super.key});
 
   @override
   _RegisterScreenState createState() => _RegisterScreenState();
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  TextEditingController name = TextEditingController();
-  TextEditingController email = TextEditingController();
-  TextEditingController password = TextEditingController();
+  final TextEditingController name = TextEditingController();
+  final TextEditingController email = TextEditingController();
+  final TextEditingController password = TextEditingController();
   bool _obscureText = true;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  final String passwordPattern = r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$';
+  final String passwordPattern =
+      r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$';
 
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
 
     return Scaffold(
-      body: Stack(
-        children: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: SingleChildScrollView(
+      resizeToAvoidBottomInset: true,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: <Widget>[
+              // Logo
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Flexible(
+                    child: Image.asset(
+                      'assets/logo.png',
+                      height: 100,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              // Registration Form
+              Container(
+                padding: EdgeInsets.symmetric(
+                  horizontal: mediaQuery.size.width * 0.1,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color.fromARGB(130, 143, 143, 143),
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: <Widget>[
-                    // Logo Row
+                  children: [
+                    const SizedBox(height: 20),
+                    _buildInputField('Name', name),
+                    const SizedBox(height: 20),
+                    _buildInputField('Email', email),
+                    const SizedBox(height: 20),
+                    _buildInputField('Password', password, isPassword: true),
+                    const SizedBox(height: 20),
+                    _buildRegisterButton(mediaQuery),
+                    const SizedBox(height: 10),
+                    _buildGoogleSignInButton(),
+                    const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Image.asset(
-                          'assets/logo.png',
-                          height: 100,
+                        const Text('Already Have An Account? ',
+                            style: TextStyle(color: Colors.white)),
+                        GestureDetector(
+                          child: const Text(
+                            'Log In',
+                            style: TextStyle(
+                                color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                          onTap: () => Navigator.pop(context),
                         ),
                       ],
                     ),
-                    SizedBox(height: 20), // Add some space between the logo and the container
-
-                    // Registration Form Container
-                    Container(
-                      padding: EdgeInsets.symmetric(horizontal: mediaQuery.size.width * 0.1),
-                      decoration: BoxDecoration(
-                        color: const Color.fromARGB(130, 143, 143, 143),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Column(
-                        children: [
-                          const SizedBox(height: 20),
-                          _buildInputField('NAME', name),
-                          const SizedBox(height: 20),
-                          _buildInputField('EMAIL', email),
-                          const SizedBox(height: 20),
-                          _buildInputField('PASSWORD', password, isPassword: true),
-                          const SizedBox(height: 20),
-                          _buildRegisterButton(mediaQuery),
-                          const SizedBox(height: 20),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text('Already Have An Account? ', style: TextStyle(color: Colors.white)),
-                              GestureDetector(
-                                child: const Text(
-                                  'Log In',
-                                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                ),
-                                onTap: () => Navigator.pop(context),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
-                    ),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildInputField(String label, TextEditingController controller, {bool isPassword = false}) {
+  Widget _buildInputField(String label, TextEditingController controller,
+      {bool isPassword = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -113,13 +120,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
               fillColor: Colors.white.withOpacity(0.2),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
-                borderSide: BorderSide(
+                borderSide: const BorderSide(
                   color: Colors.transparent,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(20),
-                borderSide: BorderSide(
+                borderSide: const BorderSide(
                   color: Color(0xFFFFEB3B),
                   width: 2.0,
                 ),
@@ -139,7 +146,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               )
                   : null,
             ),
-            style: TextStyle(color: Colors.white),
+            style: const TextStyle(color: Colors.white),
           ),
         ),
       ],
@@ -150,47 +157,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return InkWell(
       borderRadius: BorderRadius.circular(20),
       onTap: () async {
-        // Your validation and registration code
         if (name.text.isEmpty || email.text.isEmpty || password.text.isEmpty) {
           _showErrorDialog('Please fill in all fields.');
-        } else if (!RegExp(passwordPattern).hasMatch(password.text)) {
-          _showErrorDialog('Password must be at least 8 characters, include an uppercase letter, a lowercase letter, a number, and a special character.');
-        } else if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").hasMatch(email.text)) {
+          return;
+        }
+        if (!RegExp(passwordPattern).hasMatch(password.text)) {
+          _showErrorDialog(
+              'Password must be at least 8 characters, include an uppercase letter, a lowercase letter, a number, and a special character.');
+          return;
+        }
+        if (!RegExp(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$").hasMatch(email.text)) {
           _showErrorDialog('The email address is badly formatted.');
-        } else {
-          try {
-            UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
-              email: email.text,
-              password: password.text,
-            );
+          return;
+        }
 
-            await _firestore.collection('Users').doc(userCredential.user!.uid).set({
+        try {
+          UserCredential userCredential =
+          await _auth.createUserWithEmailAndPassword(
+            email: email.text,
+            password: password.text,
+          );
+
+          User? user = userCredential.user;
+
+          if (user != null) {
+            await user.sendEmailVerification();
+            await _firestore.collection('Users').doc(user.uid).set({
               'name': name.text,
               'email': email.text,
               'createdAt': Timestamp.now(),
             });
 
-            showDialog(
-              context: context,
-              builder: (BuildContext context) {
-                return AlertDialog(
-                  title: const Text('Success'),
-                  content: const Text('Registration successful!'),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        Navigator.pushReplacementNamed(context, '/login');
-                      },
-                      child: const Text('OK'),
-                    ),
-                  ],
-                );
-              },
-            );
-          } catch (e) {
-            _showErrorDialog(e.toString());
+            _showSuccessDialog(
+                'Registration successful! A verification email has been sent.');
           }
+        } catch (e) {
+          _showErrorDialog(e.toString());
         }
       },
       child: Container(
@@ -210,6 +212,73 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  Widget _buildGoogleSignInButton() {
+    return InkWell(
+      borderRadius: BorderRadius.circular(20),
+      onTap: _signInWithGoogle,
+      child: Container(
+        height: 50,
+        width: 250,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Image.asset('assets/google.png', height: 30),
+            const SizedBox(width: 10),
+            const Text('Sign in with Google',
+                style: TextStyle(fontSize: 16, color: Colors.black)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _signInWithGoogle() async {
+    try {
+      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      if (googleUser == null) return;
+
+      final GoogleSignInAuthentication googleAuth =
+      await googleUser.authentication;
+      final AuthCredential credential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      await FirebaseAuth.instance.signInWithCredential(credential);
+    } catch (e) {
+      _showErrorDialog("Google Sign-In failed. Try again.");
+    }
+  }
+
+  void _showSuccessDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Success'),
+          content: Text(message),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => EmailVerificationScreen()),
+                );
+
+              },
+              child: const Text('OK'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
@@ -219,9 +288,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           content: Text(message),
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
+              onPressed: () => Navigator.of(context).pop(),
               child: const Text('OK'),
             ),
           ],
