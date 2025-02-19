@@ -1,16 +1,18 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+///extends and super.key missing
 class EmailVerificationScreen extends StatefulWidget {
   const EmailVerificationScreen({super.key});
 
+  /// => missing
   @override
   _EmailVerificationScreenState createState() => _EmailVerificationScreenState();
 }
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  bool _isVerified = false;
+  bool _isVerified = false;  ///false instead of true
 
   @override
   void initState() {
@@ -50,7 +52,7 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
             ElevatedButton(
               onPressed: () async {
                 await _checkEmailVerified();
-                if (_isVerified) {
+                if (_isVerified) {  ///_isVerified missing
                   _navigateToLogin();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(

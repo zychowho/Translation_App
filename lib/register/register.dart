@@ -228,7 +228,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           children: [
             Image.asset('assets/google.png', height: 30),
             const SizedBox(width: 10),
-            const Text('Sign in with Google',
+            const Text('Sign up with Google',
                 style: TextStyle(fontSize: 16, color: Colors.black)),
           ],
         ),
