@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:translation_app/pages/normal_page.dart'; // Import the normal page
+import 'package:translator/translator.dart';
+import 'package:translation_app/pages/normal_page.dart';
 
 class OnboardingPage extends StatefulWidget {
+  final String languageCode;
+
+  OnboardingPage({required this.languageCode});
+
   @override
   _OnboardingPageState createState() => _OnboardingPageState();
 }
@@ -33,8 +38,48 @@ class _OnboardingPageState extends State<OnboardingPage> {
     },
   ];
 
+  final GoogleTranslator translator = GoogleTranslator();
+  List<Map<String, String>> translatedOnboardingData = [];
+  String translatedNext = "Next";
+  String translatedFinish = "Finish";
+  String translatedSkip = "Skip";
+
+  @override
+  void initState() {
+    super.initState();
+    translateOnboardingContent();
+  }
+
+  Future<void> translateOnboardingContent() async {
+    List<Map<String, String>> translatedContent = [];
+
+    // Translating onboarding content
+    for (var page in onboardingData) {
+      var translatedTitle = await translator.translate(page["title"]!, from: 'en', to: widget.languageCode);
+      var translatedDescription = await translator.translate(page["description"]!, from: 'en', to: widget.languageCode);
+
+      translatedContent.add({
+        "image": page["image"]!,
+        "title": translatedTitle.text,
+        "description": translatedDescription.text,
+      });
+    }
+
+    // Translating the button texts
+    var translatedNextText = await translator.translate("Next", from: 'en', to: widget.languageCode);
+    var translatedFinishText = await translator.translate("Finish", from: 'en', to: widget.languageCode);
+    var translatedSkipText = await translator.translate("Skip", from: 'en', to: widget.languageCode);
+
+    setState(() {
+      translatedOnboardingData = translatedContent;
+      translatedNext = translatedNextText.text;
+      translatedFinish = translatedFinishText.text;
+      translatedSkip = translatedSkipText.text;
+    });
+  }
+
   void _nextPage() {
-    if (_currentIndex < onboardingData.length - 1) {
+    if (_currentIndex < translatedOnboardingData.length - 1) {
       _pageController.nextPage(
         duration: Duration(milliseconds: 300),
         curve: Curves.easeInOut,
@@ -47,7 +92,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
   void _goToNormalPage() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => NormalPage()), // Navigate to normal page
+      MaterialPageRoute(
+        builder: (context) => NormalPage(languageCode: widget.languageCode), // Pass the languageCode to NormalPage
+      ),
     );
   }
 
@@ -55,7 +102,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
+      body: translatedOnboardingData.isEmpty
+          ? Center(child: CircularProgressIndicator())
+          : Column(
         children: [
           Expanded(
             child: PageView.builder(
@@ -65,12 +114,12 @@ class _OnboardingPageState extends State<OnboardingPage> {
                   _currentIndex = index;
                 });
               },
-              itemCount: onboardingData.length,
+              itemCount: translatedOnboardingData.length,
               itemBuilder: (context, index) {
                 return _buildOnboardingContent(
-                  onboardingData[index]["image"]!,
-                  onboardingData[index]["title"]!,
-                  onboardingData[index]["description"]!,
+                  translatedOnboardingData[index]["image"]!,
+                  translatedOnboardingData[index]["title"]!,
+                  translatedOnboardingData[index]["description"]!,
                 );
               },
             ),
@@ -82,18 +131,20 @@ class _OnboardingPageState extends State<OnboardingPage> {
               children: [
                 TextButton(
                   onPressed: _goToNormalPage,
-                  child: Text("Skip", style: TextStyle(color: Colors.red)),
+                  child: Text(translatedSkip, style: TextStyle(color: Colors.red)),
                 ),
                 Row(
                   children: List.generate(
-                    onboardingData.length,
+                    translatedOnboardingData.length,
                         (index) => _buildDot(index),
                   ),
                 ),
                 TextButton(
                   onPressed: _nextPage,
                   child: Text(
-                    _currentIndex == onboardingData.length - 1 ? "Finish" : "Next",
+                    _currentIndex == translatedOnboardingData.length - 1
+                        ? translatedFinish
+                        : translatedNext,
                     style: TextStyle(color: Colors.blue),
                   ),
                 ),

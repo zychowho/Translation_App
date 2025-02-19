@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:translator/translator.dart';
+import 'onboarding_page.dart'; // Import OnboardingPage
 
 class HomePage extends StatefulWidget {
   final String languageCode;
@@ -104,7 +105,13 @@ class _HomePageState extends State<HomePage> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text("Subscribed to $selectedPlan Plan!")),
                 );
-                Navigator.pushReplacementNamed(context, '/main_app');
+                // Navigate to OnboardingPage with the selected language
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => OnboardingPage(languageCode: widget.languageCode),
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: selectedPlan == null ? Colors.grey : Colors.blue.shade700,
@@ -121,7 +128,12 @@ class _HomePageState extends State<HomePage> {
             SizedBox(height: 10),
             TextButton(
               onPressed: () {
-                Navigator.pushReplacementNamed(context, '/onboarding_page');
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => OnboardingPage(languageCode: widget.languageCode),
+                  ),
+                );
               },
               child: Text(
                 translatedSkipSubscription,

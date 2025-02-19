@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:translator/translator.dart';
 
 class NormalPage extends StatefulWidget {
+  final String languageCode;
+
+  NormalPage({required this.languageCode});
+
   @override
   _NormalPageState createState() => _NormalPageState();
 }
@@ -9,7 +13,11 @@ class NormalPage extends StatefulWidget {
 class _NormalPageState extends State<NormalPage> {
   final TextEditingController _textController = TextEditingController();
   String _translatedText = "";
-  String _selectedLanguage = 'tl'; // Default to Filipino
+  String _selectedLanguage = '';
+  String _translatedButtonText = "";
+  String _translatedHintText = "";
+  String _translatedPlaceholder = "";
+  String _translatedSelectLanguage = "";
   final translator = GoogleTranslator();
 
   final Map<String, String> languages = {
@@ -81,13 +89,50 @@ class _NormalPageState extends State<NormalPage> {
     'Zulu': 'zu'
   };
 
-  void _translateText() async {
-    if (_textController.text.isNotEmpty) {
-      var translation = await translator.translate(_textController.text, to: _selectedLanguage);
+  Future<void> _translateAll() async {
+    try {
+      var translations = await Future.wait([
+        translator.translate("Translate", to: widget.languageCode),
+        translator.translate("Enter text to translate", to: widget.languageCode),
+        translator.translate("Translation will appear here", to: widget.languageCode),
+        translator.translate("Select Language", to: widget.languageCode),
+      ]);
+
       setState(() {
-        _translatedText = translation.text;
+        _translatedButtonText = translations[0].text;
+        _translatedHintText = translations[1].text;
+        _translatedPlaceholder = translations[2].text;
+        _translatedSelectLanguage = translations[3].text;
       });
+    } catch (e) {
+      print("Translation Error: $e");
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Translation error. Please check your connection.')),
+      );
     }
+  }
+
+  Future<void> _translateText() async {
+    if (_textController.text.isNotEmpty) {
+      try {
+        var translation = await translator.translate(_textController.text, to: widget.languageCode);
+        setState(() {
+          _translatedText = translation.text;
+        });
+      } catch (e) {
+        print("Translation Error: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Translation error. Please check your connection.')),
+        );
+      }
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedLanguage = widget.languageCode;
+    _translateAll(); // Translate initial static text
   }
 
   @override
@@ -123,7 +168,7 @@ class _NormalPageState extends State<NormalPage> {
               controller: _textController,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                hintText: "Enter text to translate",
+                hintText: _translatedHintText.isEmpty ? "Enter text to translate" : _translatedHintText,
               ),
             ),
             SizedBox(height: 20),
@@ -131,7 +176,7 @@ class _NormalPageState extends State<NormalPage> {
               value: _selectedLanguage,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
-                labelText: "Select Language",
+                labelText: _translatedSelectLanguage.isEmpty ? "Select Language" : _translatedSelectLanguage,
               ),
               items: languages.entries.map((entry) {
                 return DropdownMenuItem<String>(
@@ -142,6 +187,8 @@ class _NormalPageState extends State<NormalPage> {
               onChanged: (value) {
                 setState(() {
                   _selectedLanguage = value!;
+                  _translateAll();
+                  _translateText();
                 });
               },
             ),
@@ -155,7 +202,7 @@ class _NormalPageState extends State<NormalPage> {
                 color: Colors.grey[200],
               ),
               child: Text(
-                _translatedText.isEmpty ? "Translation will appear here" : _translatedText,
+                _translatedText.isEmpty ? _translatedPlaceholder : _translatedText,
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16, color: Colors.black),
               ),
@@ -171,7 +218,7 @@ class _NormalPageState extends State<NormalPage> {
                 ),
               ),
               child: Text(
-                "Translate",
+                _translatedButtonText.isEmpty ? "Translate" : _translatedButtonText,
                 style: TextStyle(fontSize: 18, color: Colors.white),
               ),
             ),

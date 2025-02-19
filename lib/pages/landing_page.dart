@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:translator/translator.dart';
-import 'home_page.dart';
+import 'home_page.dart';  // Import HomePage
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -202,9 +201,12 @@ class _LandingPageState extends State<LandingPage> {
             SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushReplacement(
+                // Navigate to the HomePage with the selected language
+                Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => HomePage(languageCode: selectedLanguageCode)),
+                  MaterialPageRoute(
+                    builder: (context) => HomePage(languageCode: selectedLanguageCode),
+                  ),
                 );
               },
               style: ElevatedButton.styleFrom(
