@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:translation_app/register/email_verification_screen.dart';
-
-
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:translation_app/pages/homepage.dart';
 
 class OnboardingPage extends StatefulWidget {
   @override
@@ -42,18 +41,22 @@ class _OnboardingPageState extends State<OnboardingPage> {
         curve: Curves.easeInOut,
       );
     } else {
-      _goToLandingPage();
+      _goToHomePage();
     }
   }
 
-  void _goToLandingPage() {
-    Navigator.pushReplacementNamed(context, '/landing_page');
+  void _goToHomePage() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('hasSeenOnboarding', true);
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => HomePage()),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       body: Column(
         children: [
           Expanded(
@@ -77,24 +80,16 @@ class _OnboardingPageState extends State<OnboardingPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                TextButton(
-                  onPressed: _goToLandingPage,
-                  child: Text("Skip", style: TextStyle(color: Colors.red)),
-                ),
-                Row(
-                  children: List.generate(
-                    onboardingData.length,
-                        (index) => _buildDot(index),
-                  ),
-                ),
-                TextButton(
+                _currentIndex == onboardingData.length - 1
+                    ? TextButton(
+                  onPressed: _goToHomePage,
+                  child: Text("Finish", style: TextStyle(color: Colors.blue)),
+                )
+                    : TextButton(
                   onPressed: _nextPage,
-                  child: Text(
-                    _currentIndex == onboardingData.length - 1 ? "Finish" : "Next",
-                    style: TextStyle(color: Colors.blue),
-                  ),
+                  child: Text("Next", style: TextStyle(color: Colors.blue)),
                 ),
               ],
             ),
@@ -105,54 +100,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
   }
 
   Widget _buildOnboardingContent(String image, String title, String description) {
-    return SingleChildScrollView(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SizedBox(height: 50), // Ensures proper spacing at the top
-          Container(
-            height: 250, // Fixed height for consistency
-            child: Center(
-              child: Image.asset(
-                image,
-                fit: BoxFit.contain, // Prevents distortion
-              ),
-            ),
-          ),
-          SizedBox(height: 30),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Text(
-              title,
-              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          SizedBox(height: 15),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 30),
-            child: Text(
-              description,
-              style: TextStyle(fontSize: 16, color: Colors.grey),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          SizedBox(height: 30),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDot(int index) {
-    return Container(
-      margin: EdgeInsets.symmetric(horizontal: 4),
-      width: _currentIndex == index ? 12 : 8,
-      height: _currentIndex == index ? 12 : 8,
-      decoration: BoxDecoration(
-        color: _currentIndex == index ? Colors.blue : Colors.grey,
-        shape: BoxShape.circle,
-      ),
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Image.asset(image, height: 250, fit: BoxFit.contain),
+        SizedBox(height: 30),
+        Text(title, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        SizedBox(height: 15),
+        Text(description, style: TextStyle(fontSize: 16, color: Colors.grey)),
+      ],
     );
   }
 }
-

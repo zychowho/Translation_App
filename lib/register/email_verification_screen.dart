@@ -1,36 +1,48 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
-///extends and super.key missing
 class EmailVerificationScreen extends StatefulWidget {
   const EmailVerificationScreen({super.key});
 
-  /// => missing
   @override
   _EmailVerificationScreenState createState() => _EmailVerificationScreenState();
 }
 
 class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  bool _isVerified = false;  ///false instead of true
+  late User _user;
+  bool _isVerified = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
+    _user = _auth.currentUser!;
     _checkEmailVerified();
   }
 
   Future<void> _checkEmailVerified() async {
-    User? user = _auth.currentUser;
-    await user?.reload();
+    setState(() => _isLoading = true);
+    await _user.reload();
     setState(() {
-      _isVerified = user?.emailVerified ?? false;
+      _isVerified = _auth.currentUser!.emailVerified;
+      _isLoading = false;
     });
-  }
-
-  void _navigateToLogin() {
     if (_isVerified) {
       Navigator.pushReplacementNamed(context, '/login');
+    }
+  }
+
+  Future<void> _resendVerificationEmail() async {
+    try {
+      await _user.sendEmailVerification();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Verification email sent again!")),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Error: ${e.toString()}")),
+      );
     }
   }
 
@@ -49,18 +61,16 @@ class _EmailVerificationScreenState extends State<EmailVerificationScreen> {
               style: TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () async {
-                await _checkEmailVerified();
-                if (_isVerified) {  ///_isVerified missing
-                  _navigateToLogin();
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text("Email is not verified yet. Please check your inbox."))
-                  );
-                }
-              },
+            _isLoading
+                ? const CircularProgressIndicator()
+                : ElevatedButton(
+              onPressed: _checkEmailVerified,
               child: const Text("I have verified my email"),
+            ),
+            const SizedBox(height: 10),
+            TextButton(
+              onPressed: _resendVerificationEmail,
+              child: const Text("Resend Verification Email"),
             ),
           ],
         ),

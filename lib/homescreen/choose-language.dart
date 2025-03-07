@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:translator/translator.dart';
-import 'subscription.dart';
 
-class LandingPage extends StatefulWidget {
-  const LandingPage({super.key});
+
+class ChooseLanguageScreen extends StatefulWidget {
+  final String currentLanguage; // Add this parameter
+
+  const ChooseLanguageScreen({Key? key, required this.currentLanguage}) : super(key: key);
 
   @override
-  _LandingPageState createState() => _LandingPageState();
+  _ChooseLanguageScreenState createState() => _ChooseLanguageScreenState();
 }
 
-class _LandingPageState extends State<LandingPage> {
-  String selectedLanguage = "English";
-  String selectedLanguageCode = "en";
+
+class _ChooseLanguageScreenState extends State<ChooseLanguageScreen> {
+  late String selectedLanguage;
+  late String selectedLanguageCode;
   List<Map<String, String>> languages = [];
   List<Map<String, String>> filteredLanguages = [];
   TextEditingController searchController = TextEditingController();
@@ -21,6 +23,10 @@ class _LandingPageState extends State<LandingPage> {
     super.initState();
     fetchLanguages();
     searchController.addListener(_filterLanguages);
+
+    // Set initial selected language from the passed argument
+    selectedLanguage = widget.currentLanguage;
+    selectedLanguageCode = _getLanguageCode(widget.currentLanguage);
   }
 
   Future<void> fetchLanguages() async {
@@ -48,6 +54,15 @@ class _LandingPageState extends State<LandingPage> {
     });
   }
 
+  String _getLanguageCode(String language) {
+    for (var lang in languages) {
+      if (lang["name"] == language) {
+        return lang["code"]!;
+      }
+    }
+    return "en"; // Default to English if not found
+  }
+
   void _filterLanguages() {
     String query = searchController.text.toLowerCase();
     setState(() {
@@ -69,7 +84,7 @@ class _LandingPageState extends State<LandingPage> {
         padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
         margin: EdgeInsets.symmetric(vertical: 4),
         decoration: BoxDecoration(
-          color: selectedLanguage == language ? Colors.blue[200] : Colors.transparent,
+          color: selectedLanguage == language ? Colors.blue[300] : Colors.transparent,
           border: Border.all(color: Colors.blue.shade300),
           borderRadius: BorderRadius.circular(10),
         ),
@@ -103,14 +118,6 @@ class _LandingPageState extends State<LandingPage> {
           ),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.logout, color: Colors.red),
-            onPressed: () {
-              Navigator.pushReplacementNamed(context, '/login');
-            },
-          ),
-        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -140,8 +147,8 @@ class _LandingPageState extends State<LandingPage> {
                 itemCount: filteredLanguages.length,
                 itemBuilder: (context, index) {
                   return _buildLanguageTile(
-                      filteredLanguages[index]["name"]!,
-                      filteredLanguages[index]["code"]!
+                    filteredLanguages[index]["name"]!,
+                    filteredLanguages[index]["code"]!,
                   );
                 },
               ),
@@ -149,10 +156,7 @@ class _LandingPageState extends State<LandingPage> {
             SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(builder: (context) => SubscriptionPage(languageCode: selectedLanguageCode)),
-                );
+                Navigator.pop(context, {"name": selectedLanguage, "code": selectedLanguageCode});
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blue.shade700,

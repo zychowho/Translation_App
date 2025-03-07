@@ -1,167 +1,180 @@
 import 'package:flutter/material.dart';
+import 'package:translation_app/pages/text-to-text.dart';
+import 'package:translation_app/pages/subscription.dart';
+import 'package:translation_app/pages/profilepage.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
-
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  String? selectedPlan; // Stores the selected subscription plan
+  int _selectedIndex = 0;
+
+  final List<Widget> _pages = <Widget>[
+    HomeContent(),
+    SubscriptionPage(languageCode: 'en',),
+    ProfilePage(),
+  ];
+
+  void _onItemTapped(int index) {
+    if (_selectedIndex != index) {
+      setState(() {
+        _selectedIndex = index;
+      });
+    }
+  }
+
+  Future<bool> _showLogoutConfirmation(BuildContext context) async {
+    return await showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Logout"),
+        content: Text("Are you sure you want to log out?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false), // Cancel logout
+            child: Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context, true); // Confirm logout
+            },
+            child: Text("Logout", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    ) ?? false;
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          "SpeakWise",
-          style: TextStyle(
-            color: Colors.blue.shade800,
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
+      appBar: PreferredSize(
+        preferredSize: Size.fromHeight(60.0),
+        child: ColoredBox(
+          color: Colors.blue,
+          child: Container(
+            alignment: Alignment.center,
+            padding: EdgeInsets.only(top: 10),
+            child: Text(
+              "SpeakWise",
+              style: TextStyle(
+                fontFamily: 'BerlinSansFBDemi',
+                fontSize: 50,
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
           ),
         ),
-        centerTitle: true,
       ),
-      body: Padding(
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: Padding(
         padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            // 🌎 App Icon
-            Icon(Icons.language, size: 50, color: Colors.black),
-
-            SizedBox(height: 10),
-
-            // 📢 Tagline
-            Text(
-              "Make your translations more convenient for a reasonable price!",
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-            ),
-
-            SizedBox(height: 20),
-
-            // 📜 Subscription Plans (Now Selectable)
-            Expanded(
-              child: ListView(
-                children: [
-                  _buildSubscriptionCard(
-                    title: "SILVER",
-                    description:
-                    "You can use the regular text-to-text translation and picture-to-text translation feature!",
-                    color: Colors.grey.shade300,
-                  ),
-                  _buildSubscriptionCard(
-                    title: "GOLD",
-                    description:
-                    "You're free to use text-to-text, picture-to-text, and also voice recognition translation!",
-                    color: Colors.amber.shade600,
-                  ),
-                ],
-              ),
-            ),
-
-            SizedBox(height: 20),
-
-            // 📌 Subscribe Button (Disabled until a plan is selected)
-            ElevatedButton(
-              onPressed: selectedPlan == null
-                  ? null // Disable button if no plan is selected
-                  : () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text("Subscribed to $selectedPlan Plan!")),
-                );
-                // 🚀 Navigate to main app or perform subscription logic
-                Navigator.pushReplacementNamed(context, '/main_app');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: selectedPlan == null
-                    ? Colors.grey // Grey out if disabled
-                    : Colors.blue.shade700,
-                padding: EdgeInsets.symmetric(vertical: 14, horizontal: 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: Text(
-                "Subscribe",
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
-            ),
-
-            SizedBox(height: 10),
-
-            // ⏭ Skip Subscription Button (Now Navigates to Onboarding Page)
-            TextButton(
-              onPressed: () {
-                // 🚀 Skip and go to the Onboarding Page
-                Navigator.pushReplacementNamed(context, '/onboarding_page');
-              },
-              child: Text(
-                "Skip Subscription",
-                style: TextStyle(fontSize: 16, color: Colors.red),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // 🔹 Subscription Card Widget (Selectable)
-  Widget _buildSubscriptionCard({
-    required String title,
-    required String description,
-    required Color color,
-  }) {
-    bool isSelected = selectedPlan == title; // Check if this plan is selected
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedPlan = title; // Update selected plan
-        });
-      },
-      child: Card(
-        margin: EdgeInsets.symmetric(vertical: 8),
-        elevation: 2,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        color: isSelected ? color.withOpacity(0.6) : Colors.white, // Highlight selected plan
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(5),
-                ),
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-              SizedBox(height: 10),
-              Text(
-                description,
-                style: TextStyle(fontSize: 14),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.blue,
+            borderRadius: BorderRadius.circular(30),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                blurRadius: 10,
+                spreadRadius: 2,
               ),
             ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: BottomNavigationBar(
+              items: const <BottomNavigationBarItem>[
+                BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+                BottomNavigationBarItem(icon: Icon(Icons.star), label: 'Premium'),
+                BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+              ],
+              currentIndex: _selectedIndex,
+              selectedItemColor: Colors.white,
+              unselectedItemColor: Colors.white70,
+              backgroundColor: Colors.blue,
+              onTap: _onItemTapped,
+              type: BottomNavigationBarType.fixed,
+              showSelectedLabels: false,
+              showUnselectedLabels: false,
+            ),
           ),
         ),
       ),
     );
   }
 }
+
+class HomeContent extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.all(16),
+      color: Colors.blue[50],
+      child: SingleChildScrollView(  // ✅ Added to allow scrolling
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "Learn",
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'BerlinSansFBDemi',
+              ),
+            ),
+            Text("Choose a translation mode"),
+            SizedBox(height: 20),
+            _buildOption(context, "Text to Text Speech", Icons.text_fields, Colors.red, () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => NormalPage()),
+              );
+            }),
+            _buildOption(context, "Picture to Text Speech", Icons.image, Colors.green, () {}),
+            _buildOption(context, "Voice to Text Speech", Icons.mic, Colors.orange, () {}),
+            _buildOption(context, "Picture to Voice Speech", Icons.volume_up, Colors.blue, () {}),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+  Widget _buildOption(BuildContext context, String title, IconData icon, Color color, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: EdgeInsets.symmetric(vertical: 8),
+        padding: EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.2),
+          borderRadius: BorderRadius.circular(15),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: color,
+                    fontFamily: 'BerlinSansFBDemi',
+                  ),
+                ),
+              ],
+            ),
+            Icon(icon, color: color, size: 40),
+          ],
+        ),
+      ),
+    );
+  }
