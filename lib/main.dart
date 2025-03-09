@@ -6,7 +6,7 @@ import 'package:translation_app/register/register.dart';
 import 'package:translation_app/homescreen/homescreen.dart';
 import 'package:translation_app/pages/landing_page.dart';
 import 'package:translation_app/forgotpassword/forgotpassword.dart';
-import 'package:translation_app/pages/onboarding_page.dart'; // Import Onboarding Page
+import 'package:translation_app/pages/onboarding_page.dart'; // Import On2boarding Page
 
 
 void main() async {

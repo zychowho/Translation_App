@@ -1,4 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Permission for Speech-to-Text -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
+    <!-- Permissions for accessing external storage and camera -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.CAMERA"/>
+
     <application
         android:label="translation_app"
         android:name="${applicationName}"
@@ -25,10 +34,13 @@
             android:name="flutterEmbedding"
             android:value="2" />
     </application>
+
+    <!-- Query to allow file system access for text-based intents -->
     <queries>
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT" />
             <data android:mimeType="text/plain" />
         </intent>
     </queries>
+
 </manifest>

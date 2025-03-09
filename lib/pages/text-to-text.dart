@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:translation_app/pages/homepage.dart';
 import 'package:translator/translator.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:google_ml_kit/google_ml_kit.dart';
+import 'package:image_picker/image_picker.dart';
 
 class NormalPage extends StatefulWidget {
   @override
@@ -12,6 +15,9 @@ class _NormalPageState extends State<NormalPage> {
   String _translatedText = "";
   String _selectedLanguage = 'tl'; // Default to Filipino
   final translator = GoogleTranslator();
+  late stt.SpeechToText _speech; // Speech-to-Text instance
+  bool _isListening = false; // To track if speech recognition is active
+  final ImagePicker _picker = ImagePicker(); // For picking images from gallery or camera
 
   final Map<String, String> languages = {
     'Afrikaans': 'af',
@@ -82,11 +88,69 @@ class _NormalPageState extends State<NormalPage> {
     'Zulu': 'zu'
   };
 
+  @override
+  void initState() {
+    super.initState();
+    _speech = stt.SpeechToText();
+  }
+
   void _translateText() async {
     if (_textController.text.isNotEmpty) {
       var translation = await translator.translate(_textController.text, to: _selectedLanguage);
       setState(() {
         _translatedText = translation.text;
+      });
+    }
+  }
+
+  void _startListening() async {
+    bool available = await _speech.initialize(
+      onStatus: (status) => print('Speech Status: $status'),
+      onError: (error) => print('Speech Error: $error'),
+    );
+
+    if (available) {
+      setState(() {
+        _isListening = true;
+      });
+
+      _speech.listen(
+        onResult: (result) {
+          setState(() {
+            _textController.text = result.recognizedWords;
+          });
+        },
+      );
+    }
+  }
+
+  void _stopListening() {
+    setState(() {
+      _isListening = false;
+    });
+    _speech.stop();
+  }
+
+  // OCR function to extract text from image
+  Future<void> _pickImageAndExtractText() async {
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery); // You can use ImageSource.camera for camera
+
+    if (pickedFile != null) {
+      final inputImage = InputImage.fromFilePath(pickedFile.path);
+
+      // Use TextRecognizer from google_ml_kit to process image
+      final textRecognizer = GoogleMlKit.vision.textRecognizer();
+      final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
+
+      String extractedText = '';
+      for (TextBlock block in recognizedText.blocks) {
+        for (TextLine line in block.lines) {
+          extractedText += line.text + '\n';
+        }
+      }
+
+      setState(() {
+        _textController.text = extractedText; // Display extracted text
       });
     }
   }
@@ -128,12 +192,27 @@ class _NormalPageState extends State<NormalPage> {
             children: [
               Icon(Icons.language, size: 80, color: Colors.black),
               SizedBox(height: 20),
-              TextField(
-                controller: _textController,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: "Enter text to translate",
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _textController,
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: "Enter text or use voice input",
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: _isListening ? _stopListening : _startListening,
+                    child: CircleAvatar(
+                      backgroundColor: _isListening ? Colors.red : Colors.blue,
+                      radius: 25,
+                      child: Icon(Icons.mic, color: Colors.white),
+                    ),
+                  ),
+                ],
               ),
               SizedBox(height: 20),
               DropdownButtonFormField<String>(
@@ -181,6 +260,20 @@ class _NormalPageState extends State<NormalPage> {
                 ),
                 child: Text(
                   "Translate",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: _pickImageAndExtractText,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text(
+                  "Pick Image and Extract Text",
                   style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
