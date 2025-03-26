@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:translation_app/login/login.dart';
+import 'package:translation_app/pages/profilepage.dart';
 import 'package:translation_app/register/register.dart';
 import 'package:translation_app/homescreen/homescreen.dart';
 import 'package:translation_app/pages/landing_page.dart';
 import 'package:translation_app/forgotpassword/forgotpassword.dart';
+import 'package:translation_app/pages/onboarding_page.dart'; // Import On2boarding Page
 
 
 void main() async {
@@ -28,10 +30,15 @@ class MyApp extends StatelessWidget {
       initialRoute: '/home',
       routes: {
         '/login': (context) => LoginScreen(),
-        '/home': (context) => HomeScreen(),
+        '/home': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map<String, String>?;
+          return HomeScreen(languageCode: args?['languageCode'] ?? 'en');
+        },
         '/pages': (context) => LandingPage(),
         '/register': (context) => RegisterScreen(),
         '/forgot-password': (context) => ForgotPasswordScreen(),
+        '/onboarding_page': (context) => OnboardingPage(), // Added onboarding page
+        '/profilepage': (context) => ProfilePage(),
       },
     );
   }
