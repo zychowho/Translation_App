@@ -19,39 +19,77 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isPasswordVisible = false;
 
   Future<void> _login() async {
-    setState(() {
-      _isLoading = true;
-    });
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showErrorDialog("Email and password cannot be empty.");
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
     try {
-      await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
       );
 
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await Future.delayed(Duration(milliseconds: 500)); // Ensure prefs is loaded
+      if (!mounted) return; // Prevent issues if the widget is unmounted
 
-      bool hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
-      print("DEBUG: hasSeenOnboarding = $hasSeenOnboarding"); // Debugging
+      // Check if email is verified
+      if (!userCredential.user!.emailVerified) {
+        _showErrorDialog("Please verify your email before logging in.");
+        setState(() => _isLoading = false);
+        return;
+      }
+
+      // Check if this is the first login for this user
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String userId = userCredential.user!.uid;
+      String userKey = 'user_onboarded_$userId'; // Unique key for each user
+      bool hasSeenOnboarding = prefs.getBool(userKey) ?? false;
 
       if (!hasSeenOnboarding) {
-        await prefs.setBool('hasSeenOnboarding', true);
+        // First time login - show onboarding
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => OnboardingPage()),
+          MaterialPageRoute(builder: (context) => OnboardingPage(userId: userId)),
         );
       } else {
+        // Not first time - go directly to home
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => HomePage()),
         );
       }
     } on FirebaseAuthException catch (e) {
-      _showErrorDialog(e.message ?? "An error occurred. Please try again.");
+      if (!mounted) return;
+      _showErrorDialog(_getFirebaseAuthError(e.code));
+    } catch (e) {
+      if (!mounted) return;
+      _showErrorDialog("Unexpected error: $e");
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String _getFirebaseAuthError(String errorCode) {
+    switch (errorCode) {
+      case 'invalid-email':
+        return 'Invalid email format. Please enter a valid email.';
+      case 'user-disabled':
+        return 'This account has been disabled. Contact support.';
+      case 'user-not-found':
+        return 'No user found with this email. Please check again.';
+      case 'wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'too-many-requests':
+        return 'Too many failed login attempts. Please try again later.';
+      default:
+        return 'An error occurred. Please try again.';
     }
   }
 
@@ -59,12 +97,12 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text("Error"),
+        title: Text("Login Error"),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text("Okay"),
+            child: Text("OK"),
           ),
         ],
       ),
@@ -115,7 +153,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           decoration: InputDecoration(
                             labelText: 'Email',
                             border: UnderlineInputBorder(),
-                            filled: false,
                           ),
                           keyboardType: TextInputType.emailAddress,
                         ),
@@ -126,7 +163,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           decoration: InputDecoration(
                             labelText: 'Password',
                             border: UnderlineInputBorder(),
-                            filled: false,
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
@@ -143,7 +179,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         _isLoading
                             ? Center(child: CircularProgressIndicator())
                             : ElevatedButton(
-                          onPressed: _login,
+                          onPressed: _isLoading ? null : _login,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
                             padding: EdgeInsets.symmetric(vertical: 14, horizontal: 100),
@@ -173,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
               padding: const EdgeInsets.only(bottom: 20.0),
               child: Text.rich(
                 TextSpan(
-                  text: "You don’t have an account yet? ",
+                  text: "Don't have an account yet? ",
                   style: TextStyle(color: Colors.white),
                   children: [
                     TextSpan(

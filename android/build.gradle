@@ -5,8 +5,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.google.gms:google-services:4.3.15'
-        classpath 'com.android.tools.build:gradle:7.3.0'
-
+        classpath 'com.android.tools.build:gradle:8.1.0'
     }
 }
 
@@ -27,4 +26,8 @@ subprojects {
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
+}
+
+ext {
+    kotlin_version = '2.0.0'
 }

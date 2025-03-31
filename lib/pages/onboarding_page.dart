@@ -3,6 +3,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:translation_app/pages/homepage.dart';
 
 class OnboardingPage extends StatefulWidget {
+  final String? userId;
+
+  OnboardingPage({this.userId});
+
   @override
   _OnboardingPageState createState() => _OnboardingPageState();
 }
@@ -34,6 +38,24 @@ class _OnboardingPageState extends State<OnboardingPage> {
     },
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    // Check if user has seen onboarding before
+    _checkOnboardingStatus();
+  }
+
+  // Check if user has seen onboarding before
+  void _checkOnboardingStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
+
+    if (hasSeenOnboarding) {
+      // If user has seen onboarding, go directly to home page
+      _goToHomePage();
+    }
+  }
+
   void _nextPage() {
     if (_currentIndex < onboardingData.length - 1) {
       _pageController.nextPage(
@@ -47,7 +69,15 @@ class _OnboardingPageState extends State<OnboardingPage> {
 
   void _goToHomePage() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Set both the general flag and the user-specific flag
     await prefs.setBool('hasSeenOnboarding', true);
+
+    // If we have a userId, set a user-specific flag
+    if (widget.userId != null) {
+      await prefs.setBool('user_onboarded_${widget.userId}', true);
+    }
+
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => HomePage()),
@@ -80,17 +110,39 @@ class _OnboardingPageState extends State<OnboardingPage> {
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                TextButton(
+                  onPressed: _goToHomePage,
+                  child: Text("Skip", style: TextStyle(color: Colors.grey)),
+                ),
+                Row(
+                  children: List.generate(
+                    onboardingData.length,
+                    (index) => Container(
+                      margin: EdgeInsets.symmetric(horizontal: 4),
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: _currentIndex == index
+                            ? Colors.blue
+                            : Colors.grey.shade300,
+                      ),
+                    ),
+                  ),
+                ),
                 _currentIndex == onboardingData.length - 1
                     ? TextButton(
-                  onPressed: _goToHomePage,
-                  child: Text("Finish", style: TextStyle(color: Colors.blue)),
-                )
+                        onPressed: _goToHomePage,
+                        child: Text("Finish",
+                            style: TextStyle(color: Colors.blue)),
+                      )
                     : TextButton(
-                  onPressed: _nextPage,
-                  child: Text("Next", style: TextStyle(color: Colors.blue)),
-                ),
+                        onPressed: _nextPage,
+                        child:
+                            Text("Next", style: TextStyle(color: Colors.blue)),
+                      ),
               ],
             ),
           ),
@@ -99,15 +151,24 @@ class _OnboardingPageState extends State<OnboardingPage> {
     );
   }
 
-  Widget _buildOnboardingContent(String image, String title, String description) {
+  Widget _buildOnboardingContent(
+      String image, String title, String description) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         Image.asset(image, height: 250, fit: BoxFit.contain),
         SizedBox(height: 30),
-        Text(title, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        Text(title,
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
         SizedBox(height: 15),
-        Text(description, style: TextStyle(fontSize: 16, color: Colors.grey)),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Text(
+            description,
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+            textAlign: TextAlign.center,
+          ),
+        ),
       ],
     );
   }

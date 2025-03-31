@@ -16,11 +16,12 @@ class ProfilePage extends StatelessWidget {
         ),
         title: Text(
           "Profile",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+          style: TextStyle(
+              fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
         ),
         centerTitle: true,
       ),
-      body: SingleChildScrollView( // ✅ Added ScrollView to prevent overflow
+      body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -29,35 +30,35 @@ class ProfilePage extends StatelessWidget {
               padding: EdgeInsets.symmetric(vertical: 30),
               decoration: BoxDecoration(
                 color: Colors.blue[200],
-                borderRadius: BorderRadius.only(bottomLeft: Radius.circular(50), bottomRight: Radius.circular(50)),
+                borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(50),
+                    bottomRight: Radius.circular(50)),
               ),
               child: Column(
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundImage: AssetImage('assets/profile.jpg'), // Replace with the actual image path
+                    backgroundImage: AssetImage(
+                        'assets/profile.jpg'), // Replace with the actual image path
                   ),
                   SizedBox(height: 10),
                   Text(
                     "Juliet Yirrah",
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.black),
-                  ),
-                  Text(
-                    "View full profile",
-                    style: TextStyle(fontSize: 16, color: Colors.black54),
+                    style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
                   ),
                 ],
               ),
             ),
             SizedBox(height: 20),
-            _buildProfileOption(Icons.person, "Account Information"),
-            _buildProfileOption(Icons.lock, "Password"),
             _buildProfileOption(Icons.settings, "Settings"),
-            _buildProfileOption(Icons.help, "Help & Support"),
-            _buildProfileOption(Icons.logout, "Log out", color: Colors.red, onTap: () {
+            _buildProfileOption(Icons.logout, "Log out", color: Colors.red,
+                onTap: () {
               _showLogoutConfirmation(context);
             }),
-            SizedBox(height: 20), // ✅ Extra space to avoid bottom cut-off
+            SizedBox(height: 20),
           ],
         ),
       ),
@@ -78,7 +79,8 @@ class ProfilePage extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(context); // Close the popup
-              Navigator.pushReplacementNamed(context, '/login'); // Redirect to login
+              Navigator.pushReplacementNamed(
+                  context, '/login'); // Redirect to login
             },
             child: Text("Logout", style: TextStyle(color: Colors.red)),
           ),
@@ -87,7 +89,8 @@ class ProfilePage extends StatelessWidget {
     );
   }
 
-  Widget _buildProfileOption(IconData icon, String title, {Color color = Colors.black, VoidCallback? onTap}) {
+  Widget _buildProfileOption(IconData icon, String title,
+      {Color color = Colors.black, VoidCallback? onTap}) {
     return GestureDetector(
       onTap: onTap,
       child: Padding(
@@ -103,7 +106,8 @@ class ProfilePage extends StatelessWidget {
             children: [
               Icon(icon, color: color),
               SizedBox(width: 15),
-              Text(title, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+              Text(title,
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
             ],
           ),
         ),

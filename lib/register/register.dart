@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 import 'email_verification_screen.dart';
@@ -13,16 +14,17 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  TextEditingController name = TextEditingController();
-  TextEditingController email = TextEditingController();
-  TextEditingController password = TextEditingController();
+  final TextEditingController name = TextEditingController();
+  final TextEditingController email = TextEditingController();
+  final TextEditingController password = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isLoading = false;
 
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  final String passwordPattern = r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#\\$&*~]).{8,}$';
+  final String passwordPattern =
+      r'^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!@#\$&*~]).{8,}$';
 
   @override
   Widget build(BuildContext context) {
@@ -47,8 +49,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Image.asset(
                           'assets/speakwise.png',
@@ -56,56 +56,28 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           fit: BoxFit.contain,
                         ),
                         SizedBox(height: 40),
-                        TextField(
-                          controller: name,
-                          decoration: InputDecoration(
-                            labelText: 'Name',
-                            border: UnderlineInputBorder(),
-                          ),
-                        ),
+                        _buildTextField(name, 'Name'),
                         SizedBox(height: 30),
-                        TextField(
-                          controller: email,
-                          decoration: InputDecoration(
-                            labelText: 'Email',
-                            border: UnderlineInputBorder(),
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                        ),
+                        _buildTextField(email, 'Email', isEmail: true),
                         SizedBox(height: 30),
-                        TextField(
-                          controller: password,
-                          obscureText: !_isPasswordVisible,
-                          decoration: InputDecoration(
-                            labelText: 'Password',
-                            border: UnderlineInputBorder(),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                              ),
-                              onPressed: () {
-                                setState(() {
-                                  _isPasswordVisible = !_isPasswordVisible;
-                                });
-                              },
-                            ),
-                          ),
-                        ),
+                        _buildPasswordField(),
                         SizedBox(height: 30),
                         _isLoading
-                            ? Center(child: CircularProgressIndicator())
+                            ? CircularProgressIndicator()
                             : ElevatedButton(
                           onPressed: _register,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(vertical: 14, horizontal: 100),
+                            padding: EdgeInsets.symmetric(
+                                vertical: 14, horizontal: 100),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(30),
                             ),
                           ),
                           child: Text(
                             'Register',
-                            style: TextStyle(fontSize: 16, color: Colors.blue),
+                            style: TextStyle(
+                                fontSize: 16, color: Colors.blue),
                           ),
                         ),
                       ],
@@ -123,27 +95,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   children: [
                     TextSpan(
                       text: "Log in here.",
-                      style: TextStyle(color: Colors.black87, fontWeight: FontWeight.normal),
+                      style: TextStyle(
+                          color: Colors.black87, fontWeight: FontWeight.normal),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {
                           Navigator.of(context).pushReplacement(
-                            PageRouteBuilder(
-                              transitionDuration: Duration(milliseconds: 500), // Animation speed
-                              pageBuilder: (context, animation, secondaryAnimation) => LoginScreen(),
-                              transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                                const begin = Offset(-1.0, 0.0); // Slide from left to right
-                                const end = Offset.zero;
-                                const curve = Curves.easeInOut;
-
-                                var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-                                var offsetAnimation = animation.drive(tween);
-
-                                return SlideTransition(
-                                  position: offsetAnimation,
-                                  child: child,
-                                );
-                              },
-                            ),
+                            MaterialPageRoute(
+                                builder: (context) => LoginScreen()),
                           );
                         },
                     ),
@@ -158,30 +116,96 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
+  /// 🔹 Builds a standard text field
+  Widget _buildTextField(TextEditingController controller, String label,
+      {bool isEmail = false}) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        border: UnderlineInputBorder(),
+      ),
+      keyboardType: isEmail ? TextInputType.emailAddress : TextInputType.text,
+    );
+  }
+
+  /// 🔹 Builds the password field
+  Widget _buildPasswordField() {
+    return TextField(
+      controller: password,
+      obscureText: !_isPasswordVisible,
+      decoration: InputDecoration(
+        labelText: 'Password',
+        border: UnderlineInputBorder(),
+        suffixIcon: IconButton(
+          icon: Icon(
+            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+          ),
+          onPressed: () {
+            setState(() {
+              _isPasswordVisible = !_isPasswordVisible;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
+  /// ✅ **Registers the user with Firebase**
   void _register() async {
+    if (_isLoading) return; // Prevent multiple presses
+
     setState(() {
       _isLoading = true;
     });
+
     try {
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      print("🚀 Attempting to register user...");
+
+      // 🔹 Create the user in Firebase Auth
+      UserCredential userCredential =
+      await _auth.createUserWithEmailAndPassword(
         email: email.text.trim(),
         password: password.text,
       );
 
-      await userCredential.user!.sendEmailVerification();
+      print("✅ User registered: ${userCredential.user!.uid}");
 
+      // 🔹 Send email verification
+      await userCredential.user!.sendEmailVerification();
+      print("📧 Verification email sent!");
+
+      // 🔹 Store user data in Firestore
       await _firestore.collection('Users').doc(userCredential.user!.uid).set({
         'name': name.text,
         'email': email.text.trim(),
         'createdAt': Timestamp.now(),
       });
 
+      print("✅ User data saved to Firestore");
+
+      // 🔹 Navigate to email verification screen
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => EmailVerificationScreen()),
       );
+    } on FirebaseAuthException catch (e) {
+      print("❌ FirebaseAuthException: ${e.code} - ${e.message}");
+      if (e.code == 'email-already-in-use') {
+        _showErrorDialog("This email is already registered.");
+      } else if (e.code == 'weak-password') {
+        _showErrorDialog("Your password is too weak.");
+      } else if (e.code == 'invalid-email') {
+        _showErrorDialog("Invalid email format.");
+      } else {
+        _showErrorDialog(e.message ?? "An error occurred.");
+      }
+    } on FirebaseException catch (e) {
+      print("❌ FirebaseException: ${e.code} - ${e.message}");
+      _showErrorDialog("Database Error: ${e.message}");
     } catch (e) {
-      _showErrorDialog(e.toString());
+      print("❌ General Error: $e");
+      _showErrorDialog("An unexpected error occurred: $e");
     } finally {
       setState(() {
         _isLoading = false;
@@ -189,6 +213,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  /// 📌 Shows error dialog
   void _showErrorDialog(String message) {
     showDialog(
       context: context,

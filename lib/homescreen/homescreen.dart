@@ -48,7 +48,11 @@ class _HomeScreenState extends State<HomeScreen> {
           gradient: LinearGradient(
             begin: Alignment.bottomLeft,
             end: Alignment.topCenter,
-            colors: [Colors.lightBlue.shade700, Colors.lightBlue.shade300, Colors.white],
+            colors: [
+              Colors.lightBlue.shade700,
+              Colors.lightBlue.shade300,
+              Colors.white
+            ],
           ),
         ),
         child: Column(
@@ -66,7 +70,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       context,
                       MaterialPageRoute(
                         builder: (context) => ChooseLanguageScreen(
-                          currentLanguage: selectedLanguage, // Pass the selected language
+                          currentLanguage:
+                              selectedLanguage, // Pass the selected language
                         ),
                       ),
                     );
@@ -81,7 +86,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
                     backgroundColor: Colors.white,
                   ),
                   child: Text(
@@ -121,10 +127,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         context,
                         PageRouteBuilder(
                           transitionDuration: Duration(milliseconds: 500),
-                          pageBuilder: (context, animation, secondaryAnimation) => RegisterScreen(),
-                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  RegisterScreen(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
                             return SlideTransition(
-                              position: Tween<Offset>(begin: Offset(1.0, 0.0), end: Offset.zero)
+                              position: Tween<Offset>(
+                                      begin: Offset(1.0, 0.0), end: Offset.zero)
                                   .animate(animation),
                               child: child,
                             );
@@ -135,7 +145,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: OutlinedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 20),
                       side: BorderSide(color: Colors.white),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
                     ),
                     child: FittedBox(
                       fit: BoxFit.scaleDown,
@@ -154,10 +165,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       Navigator.of(context).push(
                         PageRouteBuilder(
                           transitionDuration: Duration(milliseconds: 500),
-                          pageBuilder: (context, animation, secondaryAnimation) => LoginScreen(),
-                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  LoginScreen(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
                             return SlideTransition(
-                              position: Tween<Offset>(begin: Offset(1.0, 0.0), end: Offset.zero)
+                              position: Tween<Offset>(
+                                      begin: Offset(1.0, 0.0), end: Offset.zero)
                                   .animate(animation),
                               child: child,
                             );
@@ -167,7 +182,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     style: ElevatedButton.styleFrom(
                       padding: EdgeInsets.symmetric(vertical: 20),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
                       backgroundColor: Colors.white,
                     ),
                     child: FittedBox(
