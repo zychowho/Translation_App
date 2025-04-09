@@ -1,0 +1,2 @@
+D:/Translation_App/android/app/.cxx/Debug/3h736x4e/armeabi-v7a/CMakeFiles/edit_cache.dir
+D:/Translation_App/android/app/.cxx/Debug/3h736x4e/armeabi-v7a/CMakeFiles/rebuild_cache.dir
