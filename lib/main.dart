@@ -12,13 +12,13 @@ import 'package:translation_app/pages/onboarding_page.dart'; // Import On2boardi
 void main() async {
   // Ensure Flutter is initialized
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase
   await Firebase.initializeApp();
-  
+
   // Default to false (show onboarding)
   bool hasSeenOnboarding = false;
-  
+
   try {
     // Try to get SharedPreferences
     SharedPreferences prefs = await SharedPreferences.getInstance();
@@ -27,14 +27,14 @@ void main() async {
     // If there's an error, log it but continue with default value
     print('Error accessing SharedPreferences: $e');
   }
-  
+
   // Run the app with the determined state
   runApp(MyApp(hasSeenOnboarding: hasSeenOnboarding));
 }
 
 class MyApp extends StatelessWidget {
   final bool hasSeenOnboarding;
-  
+
   const MyApp({super.key, required this.hasSeenOnboarding});
 
   @override
@@ -46,8 +46,8 @@ class MyApp extends StatelessWidget {
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      // If there was an error with SharedPreferences, this will default to showing onboarding
-      initialRoute: hasSeenOnboarding ? '/login' : '/onboarding_page',
+      // Always go to login screen first
+      initialRoute: '/login',
       routes: {
         '/login': (context) => LoginScreen(),
         '/home': (context) {

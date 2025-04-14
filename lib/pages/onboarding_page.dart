@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:translation_app/pages/homepage.dart';
+import 'package:translation_app/login/login.dart';
 
 class OnboardingPage extends StatefulWidget {
   final String? userId;
@@ -41,19 +42,7 @@ class _OnboardingPageState extends State<OnboardingPage> {
   @override
   void initState() {
     super.initState();
-    // Check if user has seen onboarding before
-    _checkOnboardingStatus();
-  }
-
-  // Check if user has seen onboarding before
-  void _checkOnboardingStatus() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    bool hasSeenOnboarding = prefs.getBool('hasSeenOnboarding') ?? false;
-
-    if (hasSeenOnboarding) {
-      // If user has seen onboarding, go directly to home page
-      _goToHomePage();
-    }
+    // Remove the automatic check that skips onboarding
   }
 
   void _nextPage() {

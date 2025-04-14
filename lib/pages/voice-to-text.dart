@@ -5,12 +5,12 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
 
-class NormalPage extends StatefulWidget {
+class VoiceToTextPage extends StatefulWidget {
   @override
-  _NormalPageState createState() => _NormalPageState();
+  _VoiceToTextPageState createState() => _VoiceToTextPageState();
 }
 
-class _NormalPageState extends State<NormalPage> {
+class _VoiceToTextPageState extends State<VoiceToTextPage> {
   final TextEditingController _textController = TextEditingController();
   String _translatedText = "";
   String _selectedLanguage = 'tl'; // Default to Filipino
@@ -197,16 +197,35 @@ class _NormalPageState extends State<NormalPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(Icons.text_fields, size: 80, color: Colors.red),
+              Icon(Icons.mic, size: 80, color: Colors.orange),
               SizedBox(height: 20),
-              TextField(
-                controller: _textController,
-                maxLines: 5,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: "Enter text to translate",
-                  filled: true,
-                  fillColor: Colors.grey[100],
+              GestureDetector(
+                onTap: _isListening ? _stopListening : _startListening,
+                child: Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    color: _isListening
+                        ? Colors.red.withOpacity(0.2)
+                        : Colors.orange.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(
+                      _isListening ? Icons.stop : Icons.mic,
+                      size: 80,
+                      color: _isListening ? Colors.red : Colors.orange,
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 20),
+              Text(
+                _isListening ? "Listening..." : "Tap to start speaking",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: _isListening ? Colors.red : Colors.orange,
                 ),
               ),
               SizedBox(height: 20),
@@ -247,19 +266,36 @@ class _NormalPageState extends State<NormalPage> {
               Container(
                 padding: EdgeInsets.all(15),
                 width: double.infinity,
-                height: 200,
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.black),
                   borderRadius: BorderRadius.circular(10),
                   color: Colors.grey[200],
                 ),
+                child: Text(
+                  _translatedText.isEmpty
+                      ? "Translation will appear here"
+                      : _translatedText,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
+              ),
+              SizedBox(height: 20),
+              // Display the recognized speech
+              Container(
+                padding: EdgeInsets.all(15),
+                width: double.infinity,
+                height: 150,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.white,
+                ),
                 child: SingleChildScrollView(
                   child: Text(
-                    _translatedText.isEmpty
-                        ? "Translation will appear here"
-                        : _translatedText,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, color: Colors.black),
+                    _textController.text.isEmpty
+                        ? "Recognized speech will appear here"
+                        : _textController.text,
+                    style: TextStyle(fontSize: 16),
                   ),
                 ),
               ),

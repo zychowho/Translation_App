@@ -5,6 +5,7 @@ import 'package:translation_app/pages/onboarding_page.dart';
 import 'package:translation_app/pages/homepage.dart';
 import 'package:flutter/gestures.dart';
 import 'package:translation_app/register/register.dart';
+import 'package:translation_app/register/email_verification_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -39,8 +40,80 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // Check if email is verified
       if (!userCredential.user!.emailVerified) {
-        _showErrorDialog("Please verify your email before logging in.");
         setState(() => _isLoading = false);
+
+        // Save current user for resending verification
+        User currentUser = userCredential.user!;
+
+        // Enhanced dialog for unverified email with resend option
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: Text("Email Not Verified"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.mark_email_unread,
+                  size: 50,
+                  color: Colors.orange,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  "Your email address has not been verified yet.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "Please check your inbox for the verification link or request a new one.",
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  currentUser.email!,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                },
+                child: Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  try {
+                    await currentUser.sendEmailVerification();
+                    Navigator.of(ctx).pop(); // Close dialog
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                            "Verification email sent! Please check your inbox."),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } catch (e) {
+                    Navigator.of(ctx).pop(); // Close dialog
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Error sending email: $e"),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                child: Text("Resend Email"),
+              ),
+            ],
+          ),
+        );
         return;
       }
 
@@ -51,10 +124,11 @@ class _LoginScreenState extends State<LoginScreen> {
       bool hasSeenOnboarding = prefs.getBool(userKey) ?? false;
 
       if (!hasSeenOnboarding) {
-        // First time login - show onboarding
+        // First time login - always show onboarding
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => OnboardingPage(userId: userId)),
+          MaterialPageRoute(
+              builder: (context) => OnboardingPage(userId: userId)),
         );
       } else {
         // Not first time - go directly to home
@@ -165,7 +239,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             border: UnderlineInputBorder(),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                                _isPasswordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -179,19 +255,21 @@ class _LoginScreenState extends State<LoginScreen> {
                         _isLoading
                             ? Center(child: CircularProgressIndicator())
                             : ElevatedButton(
-                          onPressed: _isLoading ? null : _login,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
-                            padding: EdgeInsets.symmetric(vertical: 14, horizontal: 100),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
-                            ),
-                          ),
-                          child: Text(
-                            'Login',
-                            style: TextStyle(fontSize: 16, color: Colors.blue),
-                          ),
-                        ),
+                                onPressed: _isLoading ? null : _login,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 14, horizontal: 100),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Login',
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.blue),
+                                ),
+                              ),
                         TextButton(
                           onPressed: () {
                             Navigator.pushNamed(context, '/forgot-password');
@@ -214,7 +292,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   children: [
                     TextSpan(
                       text: "Sign up here.",
-                      style: TextStyle(color: Colors.black87, fontWeight: FontWeight.normal),
+                      style: TextStyle(
+                          color: Colors.black87, fontWeight: FontWeight.normal),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {
                           Navigator.of(context).pushReplacement(

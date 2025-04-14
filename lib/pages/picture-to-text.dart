@@ -5,12 +5,12 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
 
-class NormalPage extends StatefulWidget {
+class PictureToTextPage extends StatefulWidget {
   @override
-  _NormalPageState createState() => _NormalPageState();
+  _PictureToTextPageState createState() => _PictureToTextPageState();
 }
 
-class _NormalPageState extends State<NormalPage> {
+class _PictureToTextPageState extends State<PictureToTextPage> {
   final TextEditingController _textController = TextEditingController();
   String _translatedText = "";
   String _selectedLanguage = 'tl'; // Default to Filipino
@@ -197,16 +197,20 @@ class _NormalPageState extends State<NormalPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(Icons.text_fields, size: 80, color: Colors.red),
+              Icon(Icons.image, size: 80, color: Colors.green),
               SizedBox(height: 20),
-              TextField(
-                controller: _textController,
-                maxLines: 5,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  hintText: "Enter text to translate",
-                  filled: true,
-                  fillColor: Colors.grey[100],
+              ElevatedButton(
+                onPressed: _pickImageAndExtractText,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: Text(
+                  "Pick Image and Extract Text",
+                  style: TextStyle(fontSize: 18, color: Colors.white),
                 ),
               ),
               SizedBox(height: 20),
@@ -247,22 +251,40 @@ class _NormalPageState extends State<NormalPage> {
               Container(
                 padding: EdgeInsets.all(15),
                 width: double.infinity,
-                height: 200,
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.black),
                   borderRadius: BorderRadius.circular(10),
                   color: Colors.grey[200],
                 ),
+                child: Text(
+                  _translatedText.isEmpty
+                      ? "Translation will appear here"
+                      : _translatedText,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
+              ),
+              SizedBox(height: 20),
+              // Display the extracted text
+              Container(
+                padding: EdgeInsets.all(15),
+                width: double.infinity,
+                height: 150,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.white,
+                ),
                 child: SingleChildScrollView(
                   child: Text(
-                    _translatedText.isEmpty
-                        ? "Translation will appear here"
-                        : _translatedText,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 16, color: Colors.black),
+                    _textController.text.isEmpty
+                        ? "Extracted text will appear here"
+                        : _textController.text,
+                    style: TextStyle(fontSize: 16),
                   ),
                 ),
               ),
+              Spacer(),
             ],
           ),
         ),
