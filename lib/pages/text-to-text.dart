@@ -4,6 +4,7 @@ import 'package:translator/translator.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_tts/flutter_tts.dart'; // <-- TTS Import
 
 class NormalPage extends StatefulWidget {
   @override
@@ -15,10 +16,10 @@ class _NormalPageState extends State<NormalPage> {
   String _translatedText = "";
   String _selectedLanguage = 'tl'; // Default to Filipino
   final translator = GoogleTranslator();
-  late stt.SpeechToText _speech; // Speech-to-Text instance
-  bool _isListening = false; // To track if speech recognition is active
-  final ImagePicker _picker =
-      ImagePicker(); // For picking images from gallery or camera
+  late stt.SpeechToText _speech;
+  bool _isListening = false;
+  final ImagePicker _picker = ImagePicker();
+  final FlutterTts _flutterTts = FlutterTts(); // <-- TTS instance
 
   final Map<String, String> languages = {
     'Afrikaans': 'af',
@@ -97,11 +98,25 @@ class _NormalPageState extends State<NormalPage> {
 
   void _translateText() async {
     if (_textController.text.isNotEmpty) {
-      var translation = await translator.translate(_textController.text,
-          to: _selectedLanguage);
+      var translation = await translator.translate(
+        _textController.text,
+        to: _selectedLanguage,
+      );
       setState(() {
         _translatedText = translation.text;
       });
+    }
+  }
+
+  Future<void> _speak() async {
+    if (_translatedText.isNotEmpty) {
+      try {
+        await _flutterTts.setLanguage(_selectedLanguage);
+        await _flutterTts.setPitch(1.0);
+        await _flutterTts.speak(_translatedText);
+      } catch (e) {
+        print("TTS Error: $e");
+      }
     }
   }
 
@@ -133,19 +148,13 @@ class _NormalPageState extends State<NormalPage> {
     _speech.stop();
   }
 
-  // OCR function to extract text from image
   Future<void> _pickImageAndExtractText() async {
-    final XFile? pickedFile = await _picker.pickImage(
-        source:
-            ImageSource.gallery); // You can use ImageSource.camera for camera
+    final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
 
     if (pickedFile != null) {
       final inputImage = InputImage.fromFilePath(pickedFile.path);
-
-      // Use TextRecognizer from google_ml_kit to process image
       final textRecognizer = GoogleMlKit.vision.textRecognizer();
-      final RecognizedText recognizedText =
-          await textRecognizer.processImage(inputImage);
+      final RecognizedText recognizedText = await textRecognizer.processImage(inputImage);
 
       String extractedText = '';
       for (TextBlock block in recognizedText.blocks) {
@@ -155,7 +164,7 @@ class _NormalPageState extends State<NormalPage> {
       }
 
       setState(() {
-        _textController.text = extractedText; // Display extracted text
+        _textController.text = extractedText;
       });
     }
   }
@@ -166,9 +175,9 @@ class _NormalPageState extends State<NormalPage> {
       onWillPop: () async {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomePage()), // Go to HomePage
+          MaterialPageRoute(builder: (context) => HomePage()),
         );
-        return false; // Prevent default back behavior
+        return false;
       },
       child: Scaffold(
         backgroundColor: Colors.white,
@@ -180,15 +189,17 @@ class _NormalPageState extends State<NormalPage> {
             onPressed: () {
               Navigator.pushReplacement(
                 context,
-                MaterialPageRoute(
-                    builder: (context) => HomePage()), // Go back to homepage
+                MaterialPageRoute(builder: (context) => HomePage()),
               );
             },
           ),
           title: Text(
             "SpeakWise",
             style: TextStyle(
-                fontSize: 24, fontWeight: FontWeight.bold, color: Colors.blue),
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.blue,
+            ),
           ),
           centerTitle: true,
         ),
@@ -241,6 +252,19 @@ class _NormalPageState extends State<NormalPage> {
                 child: Text(
                   "Translate",
                   style: TextStyle(fontSize: 18, color: Colors.white),
+                ),
+              ),
+              SizedBox(height: 10),
+              ElevatedButton.icon(
+                onPressed: _speak,
+                icon: Icon(Icons.volume_up),
+                label: Text("Speak"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
               ),
               SizedBox(height: 20),

@@ -139,13 +139,15 @@ class _VoiceToTextPageState extends State<VoiceToTextPage> {
         source:
             ImageSource.gallery); // You can use ImageSource.camera for camera
 
+
+
     if (pickedFile != null) {
       final inputImage = InputImage.fromFilePath(pickedFile.path);
 
-      // Use TextRecognizer from google_ml_kit to process image
       final textRecognizer = GoogleMlKit.vision.textRecognizer();
       final RecognizedText recognizedText =
           await textRecognizer.processImage(inputImage);
+
 
       String extractedText = '';
       for (TextBlock block in recognizedText.blocks) {
