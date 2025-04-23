@@ -5,6 +5,7 @@ import 'package:translation_app/pages/profilepage.dart';
 import 'package:translation_app/pages/picture-to-text.dart';
 import 'package:translation_app/pages/voice-to-text.dart';
 import 'package:translation_app/pages/phrases.dart' as phrases;
+import 'package:translation_app/pages/history_page.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -69,6 +70,16 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.history, color: Colors.blue[700]),
+            tooltip: 'Translation History',
+            onPressed: () {
+              Navigator.push(context,
+                  MaterialPageRoute(builder: (context) => HistoryPage()));
+            },
+          ),
+        ],
       ),
       body: _pages[_selectedIndex],
       bottomNavigationBar: Container(

@@ -5,6 +5,8 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_tts/flutter_tts.dart'; // <-- TTS Import
+import 'package:translation_app/services/translation_history_service.dart';
+import 'package:translation_app/services/firestore_service.dart';
 
 class NormalPage extends StatefulWidget {
   @override
@@ -25,6 +27,8 @@ class _NormalPageState extends State<NormalPage> {
   final FlutterTts _flutterTts = FlutterTts(); // <-- TTS instance
   String _selectedVoice = 'Default'; // Default voice
   bool _isSpeaking = false;
+  final TranslationHistoryService _historyService = TranslationHistoryService();
+  final FirestoreService _firestoreService = FirestoreService();
 
   // Voice options with pitch and rate settings
   final Map<String, Map<String, double>> _voiceOptions = {
@@ -205,9 +209,19 @@ class _NormalPageState extends State<NormalPage> {
         from: sourceLanguage,
         to: _selectedLanguage,
       );
+
       setState(() {
         _translatedText = translation.text;
       });
+
+      // Save to Firestore with type
+      await _firestoreService.addTranslation(
+        originalText: _textController.text,
+        translatedText: _translatedText,
+        sourceLanguage: sourceLanguage,
+        targetLanguage: _selectedLanguage,
+        translationType: 'text',
+      );
     }
   }
 

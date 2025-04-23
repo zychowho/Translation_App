@@ -4,6 +4,9 @@ import 'package:translator/translator.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:google_ml_kit/google_ml_kit.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:flutter_tts/flutter_tts.dart';
+import 'package:translation_app/services/translation_history_service.dart';
+import 'package:translation_app/services/firestore_service.dart';
 
 class PictureToTextPage extends StatefulWidget {
   @override
@@ -19,6 +22,10 @@ class _PictureToTextPageState extends State<PictureToTextPage> {
   bool _isListening = false; // To track if speech recognition is active
   final ImagePicker _picker =
       ImagePicker(); // For picking images from gallery or camera
+  FlutterTts _flutterTts = FlutterTts();
+  bool _isSpeaking = false;
+  final TranslationHistoryService _historyService = TranslationHistoryService();
+  final FirestoreService _firestoreService = FirestoreService();
 
   final Map<String, String> languages = {
     'Afrikaans': 'af',
@@ -102,6 +109,15 @@ class _PictureToTextPageState extends State<PictureToTextPage> {
       setState(() {
         _translatedText = translation.text;
       });
+
+      // Save to Firestore with type
+      await _firestoreService.addTranslation(
+        originalText: _textController.text,
+        translatedText: _translatedText,
+        sourceLanguage: 'en', // Assuming OCR text is in English
+        targetLanguage: _selectedLanguage,
+        translationType: 'image',
+      );
     }
   }
 
@@ -131,6 +147,39 @@ class _PictureToTextPageState extends State<PictureToTextPage> {
       _isListening = false;
     });
     _speech.stop();
+  }
+
+  Future<void> _speak() async {
+    if (_translatedText.isEmpty) return;
+
+    try {
+      setState(() {
+        _isSpeaking = true;
+      });
+
+      await _flutterTts.setLanguage(_selectedLanguage);
+      await _flutterTts.setPitch(1.0);
+      await _flutterTts.setSpeechRate(0.5);
+      await _flutterTts.speak(_translatedText);
+
+      _flutterTts.setCompletionHandler(() {
+        setState(() {
+          _isSpeaking = false;
+        });
+      });
+    } catch (e) {
+      print("TTS Error: $e");
+      setState(() {
+        _isSpeaking = false;
+      });
+    }
+  }
+
+  void _stopSpeaking() {
+    _flutterTts.stop();
+    setState(() {
+      _isSpeaking = false;
+    });
   }
 
   // OCR function to extract text from image

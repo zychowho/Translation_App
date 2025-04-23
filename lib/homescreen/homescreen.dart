@@ -3,6 +3,8 @@ import 'package:translator/translator.dart';
 import 'package:translation_app/login/login.dart';
 import 'package:translation_app/register/register.dart';
 import 'package:translation_app/homescreen/choose-language.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:translation_app/pages/homepage.dart';
 
 class HomeScreen extends StatefulWidget {
   final String languageCode;
@@ -17,6 +19,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final translator = GoogleTranslator();
   String selectedLanguage = "English";
   String languageCode = "en";
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   String translatedSignUp = "Sign Up";
   String translatedSignIn = "Sign In";
@@ -26,6 +29,21 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     languageCode = widget.languageCode;
     translateContent();
+
+    // Check if user is already logged in
+    _checkAuthStatus();
+  }
+
+  void _checkAuthStatus() {
+    // If user is already logged in, go to HomePage
+    if (_auth.currentUser != null) {
+      Future.delayed(Duration.zero, () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      });
+    }
   }
 
   Future<void> translateContent() async {
