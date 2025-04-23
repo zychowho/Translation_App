@@ -18,6 +18,7 @@ class _NormalPageState extends State<NormalPage> {
   String _sourceLanguage = 'auto'; // Default to auto-detect
   String _detectedLanguage = '';
   bool _isDetecting = false;
+  bool _isTranslating = false; // Add a flag for translation progress
   final translator = GoogleTranslator();
   late stt.SpeechToText _speech;
   bool _isListening = false;
@@ -189,6 +190,10 @@ class _NormalPageState extends State<NormalPage> {
 
   void _translateText() async {
     if (_textController.text.isNotEmpty) {
+      setState(() {
+        _isTranslating = true; // Set translating flag to true
+      });
+
       String sourceLanguage = _sourceLanguage;
 
       if (sourceLanguage == 'auto' && _detectedLanguage.isNotEmpty) {
@@ -200,14 +205,22 @@ class _NormalPageState extends State<NormalPage> {
             _detectedLanguage.isNotEmpty ? _detectedLanguage : 'en';
       }
 
-      var translation = await translator.translate(
-        _textController.text,
-        from: sourceLanguage,
-        to: _selectedLanguage,
-      );
-      setState(() {
-        _translatedText = translation.text;
-      });
+      try {
+        var translation = await translator.translate(
+          _textController.text,
+          from: sourceLanguage,
+          to: _selectedLanguage,
+        );
+        setState(() {
+          _translatedText = translation.text;
+        });
+      } catch (e) {
+        print('Error during translation: $e');
+      } finally {
+        setState(() {
+          _isTranslating = false; // Reset translating flag
+        });
+      }
     }
   }
 
@@ -454,7 +467,7 @@ class _NormalPageState extends State<NormalPage> {
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _translateText,
+                      onPressed: _isTranslating ? null : _translateText, // Disable button if translating
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.blue,
                         padding: EdgeInsets.symmetric(vertical: 12),
@@ -462,23 +475,41 @@ class _NormalPageState extends State<NormalPage> {
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: Text(
-                        "Translate",
-                        style: TextStyle(fontSize: 16, color: Colors.white),
-                      ),
+                      child: _isTranslating
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 2,
+                                  ),
+                                ),
+                                SizedBox(width: 10),
+                                Text("Translating...", style: TextStyle(fontSize: 16)),
+                              ],
+                            )
+                          : Text(
+                              "Translate",
+                              style: TextStyle(fontSize: 16, color: Colors.white),
+                            ),
                     ),
                   ),
                   SizedBox(width: 10),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: _isSpeaking ? _stopSpeaking : _speak,
-                      icon: Icon(_isSpeaking ? Icons.stop : Icons.volume_up,
-                          size: 18),
-                      label: Text(_isSpeaking ? "Stop" : "Speak",
-                          style: TextStyle(fontSize: 16)),
+                      onPressed: _isSpeaking ? _stopSpeaking : _speak, // Toggle speak/stop
+                      icon: _isSpeaking
+                          ? Icon(Icons.stop, size: 18)
+                          : Icon(Icons.volume_up, size: 18),
+                      label: Text(
+                        _isSpeaking ? "Stop" : "Speak", // Use "Stop" instead of "Stopping..."
+                        style: TextStyle(fontSize: 16),
+                      ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            _isSpeaking ? Colors.red : Colors.green,
+                        backgroundColor: _isSpeaking ? Colors.red : Colors.green,
                         padding: EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),

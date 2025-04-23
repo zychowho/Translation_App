@@ -193,112 +193,114 @@ class _VoiceToTextPageState extends State<VoiceToTextPage> {
         ),
         body: Padding(
           padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Icon(Icons.mic, size: 80, color: Colors.orange),
-              SizedBox(height: 20),
-              GestureDetector(
-                onTap: _isListening ? _stopListening : _startListening,
-                child: Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    color: _isListening
-                        ? Colors.red.withOpacity(0.2)
-                        : Colors.orange.withOpacity(0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Icon(
-                      _isListening ? Icons.stop : Icons.mic,
-                      size: 80,
-                      color: _isListening ? Colors.red : Colors.orange,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Icon(Icons.mic, size: 80, color: Colors.orange),
+                SizedBox(height: 20),
+                GestureDetector(
+                  onTap: _isListening ? _stopListening : _startListening,
+                  child: Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      color: _isListening
+                          ? Colors.red.withOpacity(0.2)
+                          : Colors.orange.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Icon(
+                        _isListening ? Icons.stop : Icons.mic,
+                        size: 80,
+                        color: _isListening ? Colors.red : Colors.orange,
+                      ),
                     ),
                   ),
                 ),
-              ),
-              SizedBox(height: 20),
-              Text(
-                _isListening ? "Listening..." : "Tap to start speaking",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: _isListening ? Colors.red : Colors.orange,
-                ),
-              ),
-              SizedBox(height: 20),
-              DropdownButtonFormField<String>(
-                value: _selectedLanguage,
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  labelText: "Select Language",
-                ),
-                items: languages.entries.map((entry) {
-                  return DropdownMenuItem<String>(
-                    value: entry.value,
-                    child: Text(entry.key),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedLanguage = value!;
-                  });
-                },
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _translateText,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                SizedBox(height: 20),
+                Text(
+                  _isListening ? "Listening..." : "Tap to start speaking",
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: _isListening ? Colors.red : Colors.orange,
                   ),
                 ),
-                child: Text(
-                  "Translate",
-                  style: TextStyle(fontSize: 18, color: Colors.white),
+                SizedBox(height: 20),
+                DropdownButtonFormField<String>(
+                  value: _selectedLanguage,
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: "Select Language",
+                  ),
+                  items: languages.entries.map((entry) {
+                    return DropdownMenuItem<String>(
+                      value: entry.value,
+                      child: Text(entry.key),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedLanguage = value!;
+                    });
+                  },
                 ),
-              ),
-              SizedBox(height: 20),
-              Container(
-                padding: EdgeInsets.all(15),
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black),
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.grey[200],
-                ),
-                child: Text(
-                  _translatedText.isEmpty
-                      ? "Translation will appear here"
-                      : _translatedText,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 16, color: Colors.black),
-                ),
-              ),
-              SizedBox(height: 20),
-              // Display the recognized speech
-              Container(
-                padding: EdgeInsets.all(15),
-                width: double.infinity,
-                height: 150,
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey),
-                  borderRadius: BorderRadius.circular(10),
-                  color: Colors.white,
-                ),
-                child: SingleChildScrollView(
+                SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _translateText,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
                   child: Text(
-                    _textController.text.isEmpty
-                        ? "Recognized speech will appear here"
-                        : _textController.text,
-                    style: TextStyle(fontSize: 16),
+                    "Translate",
+                    style: TextStyle(fontSize: 18, color: Colors.white),
                   ),
                 ),
-              ),
-            ],
+                SizedBox(height: 20),
+                Container(
+                  padding: EdgeInsets.all(15),
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.black),
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.grey[200],
+                  ),
+                  child: Text(
+                    _translatedText.isEmpty
+                        ? "Translation will appear here"
+                        : _translatedText,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 16, color: Colors.black),
+                  ),
+                ),
+                SizedBox(height: 20),
+                // Display the recognized speech
+                Container(
+                  padding: EdgeInsets.all(15),
+                  width: double.infinity,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey),
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.white,
+                  ),
+                  child: SingleChildScrollView(
+                    child: Text(
+                      _textController.text.isEmpty
+                          ? "Recognized speech will appear here"
+                          : _textController.text,
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
