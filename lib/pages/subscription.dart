@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:translator/translator.dart';
-import 'onboarding_page.dart'; // Import OnboardingPage
 
-class HomePage extends StatefulWidget {
+class SubscriptionPage extends StatefulWidget {
   final String languageCode;
 
-  const HomePage({super.key, required this.languageCode});
+  const SubscriptionPage({super.key, required this.languageCode});
 
   @override
-  _HomePageState createState() => _HomePageState();
+  _SubscriptionPageState createState() => _SubscriptionPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _SubscriptionPageState extends State<SubscriptionPage> {
   String? selectedPlan;
   final translator = GoogleTranslator();
   String translatedTagline = "";
@@ -105,13 +104,7 @@ class _HomePageState extends State<HomePage> {
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(content: Text("Subscribed to $selectedPlan Plan!")),
                 );
-                // Navigate to OnboardingPage with the selected language
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => OnboardingPage(languageCode: widget.languageCode),
-                  ),
-                );
+                Navigator.pushReplacementNamed(context, '/main_app');
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: selectedPlan == null ? Colors.grey : Colors.blue.shade700,
@@ -128,12 +121,7 @@ class _HomePageState extends State<HomePage> {
             SizedBox(height: 10),
             TextButton(
               onPressed: () {
-                Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => OnboardingPage(languageCode: widget.languageCode),
-                  ),
-                );
+                Navigator.pushReplacementNamed(context, '/onboarding_page');
               },
               child: Text(
                 translatedSkipSubscription,

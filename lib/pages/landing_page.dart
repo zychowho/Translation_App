@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';  // Import HomePage
+import 'package:translator/translator.dart';
+import 'subscription.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
@@ -24,72 +25,19 @@ class _LandingPageState extends State<LandingPage> {
 
   Future<void> fetchLanguages() async {
     final supportedLanguages = {
-      'Afrikaans': 'af',
-      'Albanian': 'sq',
-      'Amharic': 'am',
-      'Arabic': 'ar',
-      'Armenian': 'hy',
-      'Basque': 'eu',
-      'Bengali': 'bn',
-      'Bulgarian': 'bg',
-      'Catalan': 'ca',
-      'Chichewa': 'ny',
-      'Chinese (Simplified)': 'zh-cn',
-      'Chinese (Traditional)': 'zh-tw',
-      'Croatian': 'hr',
-      'Czech': 'cs',
-      'Danish': 'da',
-      'Dutch': 'nl',
-      'English': 'en',
-      'Estonian': 'et',
-      'Filipino': 'tl',
-      'Finnish': 'fi',
-      'French': 'fr',
-      'German': 'de',
-      'Greek': 'el',
-      'Gujarati': 'gu',
-      'Hausa': 'ha',
-      'Hebrew': 'iw',
-      'Hindi': 'hi',
-      'Hungarian': 'hu',
-      'Icelandic': 'is',
-      'Igbo': 'ig',
-      'Indonesian': 'id',
-      'Italian': 'it',
-      'Japanese': 'ja',
-      'Kannada': 'kn',
-      'Khmer': 'km',
-      'Korean': 'ko',
-      'Latin': 'la',
-      'Latvian': 'lv',
-      'Lithuanian': 'lt',
-      'Malay': 'ms',
-      'Malayalam': 'ml',
-      'Marathi': 'mr',
-      'Myanmar (Burmese)': 'my',
-      'Nepali': 'ne',
-      'Norwegian': 'no',
-      'Polish': 'pl',
-      'Portuguese': 'pt',
-      'Romanian': 'ro',
-      'Russian': 'ru',
-      'Serbian': 'sr',
-      'Sinhala': 'si',
-      'Slovak': 'sk',
-      'Slovenian': 'sl',
-      'Spanish': 'es',
-      'Swahili': 'sw',
-      'Swedish': 'sv',
-      'Tamil': 'ta',
-      'Telugu': 'te',
-      'Thai': 'th',
-      'Turkish': 'tr',
-      'Ukrainian': 'uk',
-      'Urdu': 'ur',
-      'Vietnamese': 'vi',
-      'Welsh': 'cy',
-      'Yoruba': 'yo',
-      'Zulu': 'zu'
+      'Afrikaans': 'af', 'Albanian': 'sq', 'Amharic': 'am', 'Arabic': 'ar', 'Armenian': 'hy',
+      'Basque': 'eu', 'Bengali': 'bn', 'Bulgarian': 'bg', 'Catalan': 'ca', 'Chichewa': 'ny',
+      'Chinese (Simplified)': 'zh-cn', 'Chinese (Traditional)': 'zh-tw', 'Croatian': 'hr', 'Czech': 'cs', 'Danish': 'da',
+      'Dutch': 'nl', 'English': 'en', 'Estonian': 'et', 'Filipino': 'tl', 'Finnish': 'fi',
+      'French': 'fr', 'German': 'de', 'Greek': 'el', 'Gujarati': 'gu', 'Hausa': 'ha',
+      'Hebrew': 'iw', 'Hindi': 'hi', 'Hungarian': 'hu', 'Icelandic': 'is', 'Igbo': 'ig',
+      'Indonesian': 'id', 'Italian': 'it', 'Japanese': 'ja', 'Kannada': 'kn', 'Khmer': 'km',
+      'Korean': 'ko', 'Latin': 'la', 'Latvian': 'lv', 'Lithuanian': 'lt', 'Malay': 'ms',
+      'Malayalam': 'ml', 'Marathi': 'mr', 'Myanmar (Burmese)': 'my', 'Nepali': 'ne', 'Norwegian': 'no',
+      'Polish': 'pl', 'Portuguese': 'pt', 'Romanian': 'ro', 'Russian': 'ru', 'Serbian': 'sr',
+      'Sinhala': 'si', 'Slovak': 'sk', 'Slovenian': 'sl', 'Spanish': 'es', 'Swahili': 'sw',
+      'Swedish': 'sv', 'Tamil': 'ta', 'Telugu': 'te', 'Thai': 'th', 'Turkish': 'tr',
+      'Ukrainian': 'uk', 'Urdu': 'ur', 'Vietnamese': 'vi', 'Welsh': 'cy', 'Yoruba': 'yo', 'Zulu': 'zu'
     };
 
     setState(() {
@@ -201,12 +149,9 @@ class _LandingPageState extends State<LandingPage> {
             SizedBox(height: 10),
             ElevatedButton(
               onPressed: () {
-                // Navigate to the HomePage with the selected language
-                Navigator.push(
+                Navigator.pushReplacement(
                   context,
-                  MaterialPageRoute(
-                    builder: (context) => HomePage(languageCode: selectedLanguageCode),
-                  ),
+                  MaterialPageRoute(builder: (context) => SubscriptionPage(languageCode: selectedLanguageCode)),
                 );
               },
               style: ElevatedButton.styleFrom(

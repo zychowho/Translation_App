@@ -1,0 +1,2 @@
+C:/Users/ASUS/StudioProjects/Translation_App1/android/app/.cxx/Debug/731yn694/x86_64/CMakeFiles/edit_cache.dir
+C:/Users/ASUS/StudioProjects/Translation_App1/android/app/.cxx/Debug/731yn694/x86_64/CMakeFiles/rebuild_cache.dir

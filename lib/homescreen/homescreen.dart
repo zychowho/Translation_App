@@ -1,80 +1,203 @@
 import 'package:flutter/material.dart';
+import 'package:translator/translator.dart';
+import 'package:translation_app/login/login.dart';
+import 'package:translation_app/register/register.dart';
+import 'package:translation_app/homescreen/choose-language.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
+  final String languageCode;
+
+  const HomeScreen({Key? key, required this.languageCode}) : super(key: key);
+
+  @override
+  _HomeScreenState createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  final translator = GoogleTranslator();
+  String selectedLanguage = "English";
+  String languageCode = "en";
+
+  String translatedSignUp = "Sign Up";
+  String translatedSignIn = "Sign In";
+
+  @override
+  void initState() {
+    super.initState();
+    languageCode = widget.languageCode;
+    translateContent();
+  }
+
+  Future<void> translateContent() async {
+    final translations = await Future.wait([
+      translator.translate("Sign Up", from: 'en', to: languageCode),
+      translator.translate("Sign In", from: 'en', to: languageCode),
+    ]);
+
+    setState(() {
+      translatedSignUp = translations[0].text;
+      translatedSignIn = translations[1].text;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.bottomLeft,
+            end: Alignment.topCenter,
+            colors: [
+              Colors.lightBlue.shade700,
+              Colors.lightBlue.shade300,
+              Colors.white
+            ],
+          ),
+        ),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: <Widget>[
-            Container(
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Image.asset(
-                    'assets/logo.png',
-                    width: 300,
-                    height: 200,
+          children: [
+            SizedBox(height: 40),
+            Align(
+              alignment: Alignment.topCenter,
+              child: Padding(
+                padding: EdgeInsets.only(right: 20),
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final result = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ChooseLanguageScreen(
+                          currentLanguage:
+                              selectedLanguage, // Pass the selected language
+                        ),
+                      ),
+                    );
+
+                    if (result != null && result is Map<String, String>) {
+                      setState(() {
+                        selectedLanguage = result["name"]!;
+                        languageCode = result["code"]!;
+                        translateContent();
+                      });
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 15, vertical: 5),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20)),
+                    backgroundColor: Colors.white,
                   ),
-                  const SizedBox(width: 8),
-                ],
-              ),
-            ),
-            const SizedBox(height: 80),
-
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 20.0),
-              child: Text(
-                '"Language is the road map of a culture. It tells you where its people come from and where they are going." - Rita Mae Brown',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontStyle: FontStyle.italic,
-                  color: Colors.black,
+                  child: Text(
+                    '🌍 ' + selectedLanguage,
+                    style: TextStyle(color: Colors.blue, fontSize: 14),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 70),
-
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/login');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                minimumSize: Size(200, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-              child: const Text(
-                "Sign In",
-                style: TextStyle(fontSize: 18, color: Colors.white),
+            SizedBox(height: 140),
+            Center(
+              child: Image.asset(
+                'assets/speakwise.png',
+                width: MediaQuery.of(context).size.width * 0.8,
+                fit: BoxFit.contain,
               ),
             ),
-            const SizedBox(height: 16),
-
-
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, '/register');
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.black,
-                minimumSize: Size(200, 50),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
+            SizedBox(height: 10),
+            Text(
+              'Speak clearly, choose wisely!',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                fontStyle: FontStyle.italic,
+                color: Colors.white,
               ),
-              child: const Text(
-                "Create an Account",
-                style: TextStyle(fontSize: 18, color: Colors.white),
-              ),
+              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            Spacer(),
+            Column(
+              children: [
+                SizedBox(
+                  width: 250,
+                  child: OutlinedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          transitionDuration: Duration(milliseconds: 500),
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  RegisterScreen(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            return SlideTransition(
+                              position: Tween<Offset>(
+                                      begin: Offset(1.0, 0.0), end: Offset.zero)
+                                  .animate(animation),
+                              child: child,
+                            );
+                          },
+                        ),
+                      );
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      side: BorderSide(color: Colors.white),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        translatedSignUp,
+                        style: TextStyle(color: Colors.white, fontSize: 18),
+                      ),
+                    ),
+                  ),
+                ),
+                SizedBox(height: 10),
+                SizedBox(
+                  width: 250,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        PageRouteBuilder(
+                          transitionDuration: Duration(milliseconds: 500),
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  LoginScreen(),
+                          transitionsBuilder:
+                              (context, animation, secondaryAnimation, child) {
+                            return SlideTransition(
+                              position: Tween<Offset>(
+                                      begin: Offset(1.0, 0.0), end: Offset.zero)
+                                  .animate(animation),
+                              child: child,
+                            );
+                          },
+                        ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30)),
+                      backgroundColor: Colors.white,
+                    ),
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        translatedSignIn,
+                        style: TextStyle(fontSize: 18, color: Colors.blue),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 50),
           ],
         ),
       ),

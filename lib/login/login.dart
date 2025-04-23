@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:translation_app/pages/onboarding_page.dart';
+import 'package:translation_app/pages/homepage.dart';
 import 'package:flutter/gestures.dart';
+import 'package:translation_app/register/register.dart';
+import 'package:translation_app/register/email_verification_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -12,23 +17,153 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isLoading = false;
+  bool _isPasswordVisible = false;
 
   Future<void> _login() async {
-    setState(() {
-      _isLoading = true;
-    });
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showErrorDialog("Email and password cannot be empty.");
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
     try {
-      await _auth.signInWithEmailAndPassword(
-        email: _emailController.text.trim(),
-        password: _passwordController.text.trim(),
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
       );
-      Navigator.pushReplacementNamed(context, '/pages');
+
+      if (!mounted) return; // Prevent issues if the widget is unmounted
+
+      // Check if email is verified
+      if (!userCredential.user!.emailVerified) {
+        setState(() => _isLoading = false);
+
+        // Save current user for resending verification
+        User currentUser = userCredential.user!;
+
+        // Enhanced dialog for unverified email with resend option
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (ctx) => AlertDialog(
+            title: Text("Email Not Verified"),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.mark_email_unread,
+                  size: 50,
+                  color: Colors.orange,
+                ),
+                SizedBox(height: 16),
+                Text(
+                  "Your email address has not been verified yet.",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  "Please check your inbox for the verification link or request a new one.",
+                  textAlign: TextAlign.center,
+                ),
+                SizedBox(height: 8),
+                Text(
+                  currentUser.email!,
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(ctx).pop();
+                },
+                child: Text("Cancel"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  try {
+                    await currentUser.sendEmailVerification();
+                    Navigator.of(ctx).pop(); // Close dialog
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(
+                            "Verification email sent! Please check your inbox."),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  } catch (e) {
+                    Navigator.of(ctx).pop(); // Close dialog
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text("Error sending email: $e"),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                child: Text("Resend Email"),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+
+      // Check if this is the first login for this user
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String userId = userCredential.user!.uid;
+      String userKey = 'user_onboarded_$userId'; // Unique key for each user
+      bool hasSeenOnboarding = prefs.getBool(userKey) ?? false;
+
+      if (!hasSeenOnboarding) {
+        // First time login - always show onboarding
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+              builder: (context) => OnboardingPage(userId: userId)),
+        );
+      } else {
+        // Not first time - go directly to home
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => HomePage()),
+        );
+      }
     } on FirebaseAuthException catch (e) {
-      _showErrorDialog(e.message ?? "An error occurred. Please try again.");
+      if (!mounted) return;
+      _showErrorDialog(_getFirebaseAuthError(e.code));
+    } catch (e) {
+      if (!mounted) return;
+      _showErrorDialog("Unexpected error: $e");
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  String _getFirebaseAuthError(String errorCode) {
+    switch (errorCode) {
+      case 'invalid-email':
+        return 'Invalid email format. Please enter a valid email.';
+      case 'user-disabled':
+        return 'This account has been disabled. Contact support.';
+      case 'user-not-found':
+        return 'No user found with this email. Please check again.';
+      case 'wrong-password':
+        return 'Incorrect password. Please try again.';
+      case 'too-many-requests':
+        return 'Too many failed login attempts. Please try again later.';
+      default:
+        return 'An error occurred. Please try again.';
     }
   }
 
@@ -36,12 +171,12 @@ class _LoginScreenState extends State<LoginScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text("Error"),
+        title: Text("Login Error"),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text("Okay"),
+            child: Text("OK"),
           ),
         ],
       ),
@@ -58,86 +193,122 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20.0),
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(height: 80),
-              Image.asset('assets/logo.png', height: 100),
-              SizedBox(height: 20),
-              Text(
-                '',
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 40),
-              TextField(
-                controller: _emailController,
-                decoration: InputDecoration(
-                  labelText: 'Email',
-                  border: OutlineInputBorder(),
-                ),
-                keyboardType: TextInputType.emailAddress,
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _passwordController,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                ),
-                obscureText: true,
-              ),
-              SizedBox(height: 20),
-              _isLoading
-                  ? Center(child: CircularProgressIndicator())
-                  : ElevatedButton(
-                onPressed: _login,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.black,
-                  padding: EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.bottomLeft,
+            end: Alignment.topCenter,
+            colors: [
+              Colors.lightBlue.shade700,
+              Colors.lightBlue.shade300,
+              Colors.white
+            ],
+          ),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset(
+                          'assets/speakwise.png',
+                          width: MediaQuery.of(context).size.width * 0.8,
+                          fit: BoxFit.contain,
+                        ),
+                        SizedBox(height: 40),
+                        TextField(
+                          controller: _emailController,
+                          decoration: InputDecoration(
+                            labelText: 'Email',
+                            border: UnderlineInputBorder(),
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                        ),
+                        SizedBox(height: 30),
+                        TextField(
+                          controller: _passwordController,
+                          obscureText: !_isPasswordVisible,
+                          decoration: InputDecoration(
+                            labelText: 'Password',
+                            border: UnderlineInputBorder(),
+                            suffixIcon: IconButton(
+                              icon: Icon(
+                                _isPasswordVisible
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
+                              ),
+                              onPressed: () {
+                                setState(() {
+                                  _isPasswordVisible = !_isPasswordVisible;
+                                });
+                              },
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: 30),
+                        _isLoading
+                            ? Center(child: CircularProgressIndicator())
+                            : ElevatedButton(
+                                onPressed: _isLoading ? null : _login,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: Colors.white,
+                                  padding: EdgeInsets.symmetric(
+                                      vertical: 14, horizontal: 100),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(30),
+                                  ),
+                                ),
+                                child: Text(
+                                  'Login',
+                                  style: TextStyle(
+                                      fontSize: 16, color: Colors.blue),
+                                ),
+                              ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.pushNamed(context, '/forgot-password');
+                          },
+                          child: Text('Forgot Password?',
+                              style: TextStyle(color: Colors.white)),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-                child: Text(
-                  'Login',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
-                ),
               ),
-              TextButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, '/forgot-password');
-                },
-                child: Text('Forgot Password', style: TextStyle(color: Colors.black)),
-              ),
-              SizedBox(height: 20),
-              Text.rich(
+            ),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 20.0),
+              child: Text.rich(
                 TextSpan(
-                  text: "You don’t have an account yet? ",
-                  style: TextStyle(color: Colors.black),
+                  text: "Don't have an account yet? ",
+                  style: TextStyle(color: Colors.white),
                   children: [
                     TextSpan(
                       text: "Sign up here.",
-                      style: TextStyle(color: Colors.blue),
+                      style: TextStyle(
+                          color: Colors.black87, fontWeight: FontWeight.normal),
                       recognizer: TapGestureRecognizer()
                         ..onTap = () {
-                          Navigator.pushNamed(context, '/register');
+                          Navigator.of(context).pushReplacement(
+                            MaterialPageRoute(
+                              builder: (context) => RegisterScreen(),
+                            ),
+                          );
                         },
                     ),
                   ],
                 ),
                 textAlign: TextAlign.center,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
