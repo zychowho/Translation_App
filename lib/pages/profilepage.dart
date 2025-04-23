@@ -4,7 +4,10 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:translation_app/homescreen/homescreen.dart';
 import 'package:translation_app/services/firestore_service.dart';
 import 'package:translation_app/models/translation_history.dart';
+import 'package:translation_app/models/avatar.dart';
 import 'package:intl/intl.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:translation_app/pages/account_settings_page.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -18,6 +21,7 @@ class _ProfilePageState extends State<ProfilePage>
   final FirestoreService _firestoreService = FirestoreService();
   String _userName = "";
   String _userEmail = "";
+  String _selectedAvatarId = "avatar1"; // Default avatar
   bool _isLoading = true;
   String _selectedHistoryType = 'all';
 
@@ -56,6 +60,7 @@ class _ProfilePageState extends State<ProfilePage>
         if (userData != null) {
           setState(() {
             _userName = userData['name'] ?? "User";
+            _selectedAvatarId = userData['avatarId'] ?? "avatar1";
           });
         } else {
           _userName = "User";
@@ -84,6 +89,94 @@ class _ProfilePageState extends State<ProfilePage>
         SnackBar(content: Text('Error signing out: $e')),
       );
     }
+  }
+
+  void _showAvatarSelectionDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Container(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "Choose Avatar",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              SizedBox(height: 16),
+              Container(
+                height: MediaQuery.of(context).size.height *
+                    0.6, // Taller to fit more avatars
+                width: double.maxFinite,
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics:
+                      AlwaysScrollableScrollPhysics(), // Ensure it's scrollable
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 1, // Perfect squares
+                  ),
+                  itemCount: avatarOptions.length,
+                  itemBuilder: (context, index) {
+                    final avatar = avatarOptions[index];
+                    final isSelected = avatar.id == _selectedAvatarId;
+
+                    return GestureDetector(
+                      onTap: () async {
+                        setState(() {
+                          _selectedAvatarId = avatar.id;
+                        });
+
+                        Navigator.of(context).pop();
+
+                        // Update avatar in Firestore
+                        await _firestoreService.updateUserAvatar(avatar.id);
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color:
+                                isSelected ? Colors.blue : Colors.transparent,
+                            width: 3,
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(8),
+                          child: Image.asset(
+                            avatar.assetPath,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                              color: Colors.grey[300],
+                              child: Icon(Icons.person),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(height: 16),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text("Cancel"),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildHistoryTypeFilter() {
@@ -380,14 +473,26 @@ class _ProfilePageState extends State<ProfilePage>
                             top: 20, bottom: 20, left: 24, right: 24),
                         child: Column(
                           children: [
-                            // Simple avatar icon instead of profile picture
-                            CircleAvatar(
-                              radius: 50,
-                              backgroundColor: Colors.blue.withOpacity(0.1),
-                              child: Icon(
-                                Icons.person,
-                                size: 60,
-                                color: Colors.blue,
+                            // Avatar with selection functionality
+                            GestureDetector(
+                              onTap: _showAvatarSelectionDialog,
+                              child: CircleAvatar(
+                                radius: 50,
+                                backgroundColor: Colors.blue.withOpacity(0.1),
+                                backgroundImage: AssetImage(
+                                  avatarOptions
+                                      .firstWhere(
+                                        (avatar) =>
+                                            avatar.id == _selectedAvatarId,
+                                        orElse: () => avatarOptions.first,
+                                      )
+                                      .assetPath,
+                                ),
+                                onBackgroundImageError: (e, s) => Icon(
+                                  Icons.person,
+                                  size: 60,
+                                  color: Colors.blue,
+                                ),
                               ),
                             ),
                             SizedBox(height: 12),
@@ -461,31 +566,17 @@ class _ProfilePageState extends State<ProfilePage>
                                 ),
                               ),
 
-                              // Account settings option
+                              // Change Avatar option (moved to first position)
                               _buildModernOption(
                                 context,
-                                "Account Settings",
-                                "Privacy and security",
-                                Icons.person_outline,
-                                Colors.blue[700]!,
-                                () {
-                                  // Navigate to account settings
-                                },
+                                "Change Avatar",
+                                "Select profile picture",
+                                Icons.face,
+                                Colors.orange[600]!,
+                                _showAvatarSelectionDialog,
                               ),
 
-                              // Language preferences option
-                              _buildModernOption(
-                                context,
-                                "Language Preferences",
-                                "Change your preferred languages",
-                                Icons.language,
-                                Colors.green[600]!,
-                                () {
-                                  // Navigate to language preferences
-                                },
-                              ),
-
-                              // Appearance option
+                              // Appearance option (moved to second position)
                               _buildModernOption(
                                 context,
                                 "Appearance",
@@ -494,6 +585,34 @@ class _ProfilePageState extends State<ProfilePage>
                                 Colors.purple[600]!,
                                 () {
                                   // Navigate to appearance settings
+                                },
+                              ),
+
+                              // Account settings option (moved to third position)
+                              _buildModernOption(
+                                context,
+                                "Account Settings",
+                                "Privacy and security",
+                                Icons.person_outline,
+                                Colors.blue[700]!,
+                                () async {
+                                  final result = await Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) => AccountSettingsPage(
+                                        initialName: _userName,
+                                      ),
+                                    ),
+                                  );
+
+                                  // Refresh user data when returning from account settings
+                                  await _loadUserData();
+
+                                  // If name was changed, signal back to HomePage that data should be refreshed
+                                  if (result != null && result is String) {
+                                    // Return to previous screen with refresh flag
+                                    Navigator.of(context).pop(true);
+                                  }
                                 },
                               ),
 

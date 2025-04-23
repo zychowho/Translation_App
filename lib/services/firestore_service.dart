@@ -33,6 +33,16 @@ class FirestoreService {
     }, SetOptions(merge: true));
   }
 
+  // Update user's avatar
+  Future<void> updateUserAvatar(String avatarId) async {
+    if (currentUserId == null) return;
+
+    await _userDoc.update({
+      'avatarId': avatarId,
+      'updatedAt': FieldValue.serverTimestamp(),
+    });
+  }
+
   // Get user profile data
   Future<Map<String, dynamic>?> getUserProfile() async {
     if (currentUserId == null) return null;
@@ -50,12 +60,14 @@ class FirestoreService {
         await _userDoc.set({
           'name': displayName,
           'email': email,
+          'avatarId': 'avatar1', // Default avatar
           'createdAt': FieldValue.serverTimestamp(),
         });
 
         return {
           'name': displayName,
           'email': email,
+          'avatarId': 'avatar1',
         };
       }
     } catch (e) {
