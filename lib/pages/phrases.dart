@@ -19,9 +19,11 @@ class _NormalPageState extends State<NormalPage> {
   bool _loadingPhrases = false;
   final FlutterTts _flutterTts = FlutterTts();
   bool _isSpeaking = false;
+  String _currentlySpeakingPhrase = '';
+  String _currentlySpeakingCategory = '';
 
   // Create a key for caching translations
-  String get _cacheKey => 'phrases_${_sourceLanguage}_${_selectedLanguage}';
+  String get _cacheKey => 'phrases_${_sourceLanguage}_${_selectedLanguage}_v2';
 
   // Timestamp for cache expiration (24 hours)
   final int _cacheExpirationHours = 24;
@@ -66,19 +68,72 @@ class _NormalPageState extends State<NormalPage> {
 
   // Simplified language list for testing
   final Map<String, String> languages = {
+    'Afrikaans': 'af',
+    'Albanian': 'sq',
+    'Amharic': 'am',
+    'Arabic': 'ar',
+    'Armenian': 'hy',
+    'Basque': 'eu',
+    'Bengali': 'bn',
+    'Bulgarian': 'bg',
+    'Catalan': 'ca',
+    'Chichewa': 'ny',
+    'Chinese (Simplified)': 'zh-cn',
+    'Chinese (Traditional)': 'zh-tw',
+    'Croatian': 'hr',
+    'Czech': 'cs',
+    'Danish': 'da',
+    'Dutch': 'nl',
     'English': 'en',
+    'Estonian': 'et',
     'Filipino': 'tl',
-    'Spanish': 'es',
+    'Finnish': 'fi',
     'French': 'fr',
     'German': 'de',
-    'Japanese': 'ja',
-    'Korean': 'ko',
-    'Chinese (Simplified)': 'zh-cn',
-    'Arabic': 'ar',
-    'Russian': 'ru',
-    'Italian': 'it',
-    'Portuguese': 'pt',
+    'Greek': 'el',
+    'Gujarati': 'gu',
+    'Hausa': 'ha',
+    'Hebrew': 'iw',
     'Hindi': 'hi',
+    'Hungarian': 'hu',
+    'Icelandic': 'is',
+    'Igbo': 'ig',
+    'Indonesian': 'id',
+    'Italian': 'it',
+    'Japanese': 'ja',
+    'Kannada': 'kn',
+    'Khmer': 'km',
+    'Korean': 'ko',
+    'Latin': 'la',
+    'Latvian': 'lv',
+    'Lithuanian': 'lt',
+    'Malay': 'ms',
+    'Malayalam': 'ml',
+    'Marathi': 'mr',
+    'Myanmar (Burmese)': 'my',
+    'Nepali': 'ne',
+    'Norwegian': 'no',
+    'Polish': 'pl',
+    'Portuguese': 'pt',
+    'Romanian': 'ro',
+    'Russian': 'ru',
+    'Serbian': 'sr',
+    'Sinhala': 'si',
+    'Slovak': 'sk',
+    'Slovenian': 'sl',
+    'Spanish': 'es',
+    'Swahili': 'sw',
+    'Swedish': 'sv',
+    'Tamil': 'ta',
+    'Telugu': 'te',
+    'Thai': 'th',
+    'Turkish': 'tr',
+    'Ukrainian': 'uk',
+    'Urdu': 'ur',
+    'Vietnamese': 'vi',
+    'Welsh': 'cy',
+    'Yoruba': 'yo',
+    'Zulu': 'zu'
   };
 
   @override
@@ -310,14 +365,21 @@ class _NormalPageState extends State<NormalPage> {
     }
   }
 
-  Future<void> _speakPhrase(String phrase) async {
+  Future<void> _speakPhrase(String phrase, String category, String originalPhrase) async {
     if (_isSpeaking) {
       await _stopSpeaking();
+      
+      // If the same phrase was clicked again, just stop speaking
+      if (phrase == _currentlySpeakingPhrase && category == _currentlySpeakingCategory) {
+        return;
+      }
     }
 
     try {
       setState(() {
         _isSpeaking = true;
+        _currentlySpeakingPhrase = phrase;
+        _currentlySpeakingCategory = category;
       });
 
       // Map language codes to TTS-compatible language codes
@@ -330,11 +392,57 @@ class _NormalPageState extends State<NormalPage> {
         'ja': 'ja-JP',
         'ko': 'ko-KR',
         'zh-cn': 'zh-CN',
+        'zh-tw': 'zh-TW',
         'ar': 'ar-SA',
         'ru': 'ru-RU',
         'it': 'it-IT',
         'pt': 'pt-PT',
         'hi': 'hi-IN',
+        'af': 'af-ZA',
+        'sq': 'sq-AL',
+        'am': 'am-ET',
+        'hy': 'hy-AM',
+        'bn': 'bn-IN',
+        'bg': 'bg-BG',
+        'ca': 'ca-ES',
+        'hr': 'hr-HR',
+        'cs': 'cs-CZ',
+        'da': 'da-DK',
+        'nl': 'nl-NL',
+        'et': 'et-EE',
+        'fi': 'fi-FI',
+        'el': 'el-GR',
+        'gu': 'gu-IN',
+        'iw': 'he-IL', // Hebrew
+        'hu': 'hu-HU',
+        'is': 'is-IS',
+        'id': 'id-ID',
+        'kn': 'kn-IN',
+        'km': 'km-KH',
+        'lv': 'lv-LV',
+        'lt': 'lt-LT',
+        'ms': 'ms-MY',
+        'ml': 'ml-IN',
+        'mr': 'mr-IN',
+        'my': 'my-MM',
+        'ne': 'ne-NP',
+        'no': 'nb-NO',
+        'pl': 'pl-PL',
+        'ro': 'ro-RO',
+        'sr': 'sr-RS',
+        'si': 'si-LK',
+        'sk': 'sk-SK',
+        'sl': 'sl-SI',
+        'sw': 'sw-KE',
+        'sv': 'sv-SE',
+        'ta': 'ta-IN',
+        'te': 'te-IN',
+        'th': 'th-TH',
+        'tr': 'tr-TR',
+        'uk': 'uk-UA',
+        'ur': 'ur-PK',
+        'vi': 'vi-VN',
+        'cy': 'cy-GB',
       };
 
       // Get the proper TTS language code
@@ -344,28 +452,50 @@ class _NormalPageState extends State<NormalPage> {
       print("Speaking in language: $ttsLanguage");
       print("Phrase to speak: $phrase");
 
+      // Check available languages if needed
+      List<dynamic>? availableLanguages = await _flutterTts.getLanguages;
+      bool isLanguageAvailable = availableLanguages != null && 
+          (availableLanguages.contains(ttsLanguage) || 
+           availableLanguages.any((lang) => lang.toString().startsWith(ttsLanguage.split('-')[0])));
+      
+      if (!isLanguageAvailable) {
+        print("Language $ttsLanguage not directly available, trying language code only");
+        // Try with just the language code without region
+        String languageCode = ttsLanguage.split('-')[0];
+        ttsLanguage = languageCode;
+      }
+
       // Set the language first
       await _flutterTts.setLanguage(ttsLanguage);
 
       // For Chinese, Japanese, Korean and Arabic, adjust speech rate
-      if (['zh-CN', 'ja-JP', 'ko-KR', 'ar-SA'].contains(ttsLanguage)) {
+      if (['zh-CN', 'zh-TW', 'ja-JP', 'ko-KR', 'ar-SA', 'th-TH', 'he-IL', 'hi-IN', 
+           'bn-IN', 'gu-IN', 'kn-IN', 'ml-IN', 'mr-IN', 'ta-IN', 'te-IN', 'ur-PK', 
+           'my-MM', 'km-KH', 'si-LK'].contains(ttsLanguage)) {
         await _flutterTts.setSpeechRate(0.4); // Slower for complex scripts
       } else {
         await _flutterTts.setSpeechRate(0.5); // Default rate
       }
 
       // Speak the phrase
-      await _flutterTts.speak(phrase);
+      var result = await _flutterTts.speak(phrase);
+      if (result != 1) {
+        throw Exception("TTS failed to start speaking");
+      }
 
       _flutterTts.setCompletionHandler(() {
         setState(() {
           _isSpeaking = false;
+          _currentlySpeakingPhrase = '';
+          _currentlySpeakingCategory = '';
         });
       });
     } catch (e) {
       print("TTS Error: $e");
       setState(() {
         _isSpeaking = false;
+        _currentlySpeakingPhrase = '';
+        _currentlySpeakingCategory = '';
       });
 
       // Show a snackbar to inform the user about the error
@@ -382,6 +512,8 @@ class _NormalPageState extends State<NormalPage> {
     await _flutterTts.stop();
     setState(() {
       _isSpeaking = false;
+      _currentlySpeakingPhrase = '';
+      _currentlySpeakingCategory = '';
     });
   }
 
@@ -631,6 +763,7 @@ class _NormalPageState extends State<NormalPage> {
     final translatedPhrases = _translatedCategoryPhrases[category] ?? {};
 
     return ExpansionTile(
+      key: ValueKey(category),
       title: Text(
         category,
         style: TextStyle(
@@ -643,6 +776,10 @@ class _NormalPageState extends State<NormalPage> {
       collapsedIconColor: isDarkMode ? Colors.grey[400] : Colors.grey[700],
       children: phrases.map((phrase) {
         final translatedPhrase = translatedPhrases[phrase] ?? '...';
+        // Check if this phrase is the one being spoken
+        final bool isThisPhraseSpeaking = _isSpeaking && 
+                                         _currentlySpeakingPhrase == translatedPhrase && 
+                                         _currentlySpeakingCategory == category;
 
         return Card(
           margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
@@ -678,17 +815,23 @@ class _NormalPageState extends State<NormalPage> {
                     ),
                     SizedBox(width: 8),
                     GestureDetector(
-                      onTap: () => _speakPhrase(translatedPhrase),
+                      onTap: () => _speakPhrase(translatedPhrase, category, phrase),
                       child: Container(
                         padding: EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: isDarkMode ? Colors.blue[900]!.withOpacity(0.3) : Colors.blue[50],
+                          color: isThisPhraseSpeaking
+                              ? (isDarkMode ? Colors.grey[800] : Colors.grey[300])
+                              : (isDarkMode ? Colors.blue[900]!.withOpacity(0.3) : Colors.blue[50]),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
-                          Icons.volume_up,
+                          isThisPhraseSpeaking
+                              ? Icons.stop
+                              : Icons.volume_up,
                           size: 20,
-                          color: isDarkMode ? Colors.blue[400] : Colors.blue[800],
+                          color: isThisPhraseSpeaking
+                              ? (isDarkMode ? Colors.grey[400] : Colors.grey[700])
+                              : (isDarkMode ? Colors.blue[400] : Colors.blue[800]),
                         ),
                       ),
                     ),

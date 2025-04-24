@@ -34,18 +34,18 @@ class _PictureToTextPageState extends State<PictureToTextPage> {
   final Map<String, Map<String, double>> _voiceOptions = {
     'Default': {'pitch': 1.0, 'rate': 0.5},
     'Male': {
-      'pitch': 0.1,
+      'pitch': 0.2,
       'rate': 0.4
-    }, // Absolute minimum pitch for deepest possible voice
+    }, // Much deeper pitch for a more authentic male voice
     'Girl': {
-      'pitch': 1.6,
-      'rate': 0.55
+      'pitch': 1.5,
+      'rate': 0.6
     }, // Higher pitch with slightly faster rate for girly voice
     'Kid': {
-      'pitch': 2.0,
-      'rate': 0.75
-    }, // Maximum pitch with faster rate for child-like voice
-    'Robot': {'pitch': 0.8, 'rate': 0.3},
+      'pitch': 1.8,
+      'rate': 0.7
+    }, // High pitch with faster rate for child-like voice
+    'Robot': {'pitch': 0.8, 'rate': 0.25}, // Slower rate for robotic effect
   };
 
   final Map<String, String> languages = {
