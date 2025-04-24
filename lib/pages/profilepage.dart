@@ -6,8 +6,9 @@ import 'package:translation_app/services/firestore_service.dart';
 import 'package:translation_app/models/translation_history.dart';
 import 'package:translation_app/models/avatar.dart';
 import 'package:intl/intl.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:translation_app/pages/account_settings_page.dart';
+import 'package:provider/provider.dart';
+import 'package:translation_app/utils/theme_provider.dart';
+import 'package:translation_app/pages/homepage.dart';
 
 class ProfilePage extends StatefulWidget {
   @override
@@ -24,6 +25,15 @@ class _ProfilePageState extends State<ProfilePage>
   String _selectedAvatarId = "avatar1"; // Default avatar
   bool _isLoading = true;
   String _selectedHistoryType = 'all';
+  
+  // Add these controllers for account settings
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController currentPasswordController = TextEditingController();
+  final TextEditingController newPasswordController = TextEditingController();
+  final TextEditingController confirmPasswordController = TextEditingController();
+  
+  bool _isUpdatingName = false;
+  bool _isUpdatingPassword = false;
 
   // For tab controller
   late TabController _tabController;
@@ -459,8 +469,11 @@ class _ProfilePageState extends State<ProfilePage>
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? Color(0xFF121212) : Colors.white,
       body: SafeArea(
         child: _isLoading
             ? Center(child: CircularProgressIndicator())
@@ -502,7 +515,7 @@ class _ProfilePageState extends State<ProfilePage>
                               style: TextStyle(
                                 fontSize: 22,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.black87,
+                                color: isDarkMode ? Colors.white : Colors.black87,
                               ),
                             ),
                             SizedBox(height: 4),
@@ -510,7 +523,7 @@ class _ProfilePageState extends State<ProfilePage>
                               _userEmail,
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Colors.grey[600],
+                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                               ),
                             ),
                           ],
@@ -526,9 +539,9 @@ class _ProfilePageState extends State<ProfilePage>
                             Tab(text: "Profile", icon: Icon(Icons.person)),
                             Tab(text: "History", icon: Icon(Icons.history)),
                           ],
-                          labelColor: Colors.blue[700],
-                          unselectedLabelColor: Colors.grey[600],
-                          indicatorColor: Colors.blue[700],
+                          labelColor: isDarkMode ? Colors.blue[400] : Colors.blue[700],
+                          unselectedLabelColor: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                          indicatorColor: isDarkMode ? Colors.blue[400] : Colors.blue[700],
                         ),
                       ),
                     ),
@@ -540,7 +553,7 @@ class _ProfilePageState extends State<ProfilePage>
                     // Profile Settings Tab
                     Container(
                       decoration: BoxDecoration(
-                        color: Colors.grey[50],
+                        color: isDarkMode ? Color(0xFF1E1E1E) : Colors.grey[50],
                         borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(30),
                           topRight: Radius.circular(30),
@@ -561,7 +574,7 @@ class _ProfilePageState extends State<ProfilePage>
                                   style: TextStyle(
                                     fontSize: 18,
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.black87,
+                                    color: isDarkMode ? Colors.white : Colors.black87,
                                   ),
                                 ),
                               ),
@@ -576,16 +589,10 @@ class _ProfilePageState extends State<ProfilePage>
                                 _showAvatarSelectionDialog,
                               ),
 
-                              // Appearance option (moved to second position)
-                              _buildModernOption(
+                              // Appearance option with dark mode toggle
+                              _buildDarkModeOption(
                                 context,
-                                "Appearance",
-                                "Dark mode, theme settings",
-                                Icons.color_lens_outlined,
-                                Colors.purple[600]!,
-                                () {
-                                  // Navigate to appearance settings
-                                },
+                                themeProvider,
                               ),
 
                               // Account settings option (moved to third position)
@@ -595,25 +602,7 @@ class _ProfilePageState extends State<ProfilePage>
                                 "Privacy and security",
                                 Icons.person_outline,
                                 Colors.blue[700]!,
-                                () async {
-                                  final result = await Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (context) => AccountSettingsPage(
-                                        initialName: _userName,
-                                      ),
-                                    ),
-                                  );
-
-                                  // Refresh user data when returning from account settings
-                                  await _loadUserData();
-
-                                  // If name was changed, signal back to HomePage that data should be refreshed
-                                  if (result != null && result is String) {
-                                    // Return to previous screen with refresh flag
-                                    Navigator.of(context).pop(true);
-                                  }
-                                },
+                                _showAccountSettingsDialog,
                               ),
 
                               SizedBox(height: 20),
@@ -698,13 +687,16 @@ class _ProfilePageState extends State<ProfilePage>
     Color color,
     VoidCallback onTap,
   ) {
+    final isDarkMode = Provider.of<ThemeProvider>(context).isDarkMode;
+    
     return Card(
       margin: EdgeInsets.only(bottom: 16),
       elevation: 0,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: Colors.grey.shade200),
+        side: BorderSide(color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200),
       ),
+      color: isDarkMode ? Color(0xFF1E1E1E) : Colors.white,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
@@ -734,7 +726,7 @@ class _ProfilePageState extends State<ProfilePage>
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
+                        color: isDarkMode ? Colors.white : Colors.grey[800],
                       ),
                     ),
                     SizedBox(height: 4),
@@ -742,7 +734,7 @@ class _ProfilePageState extends State<ProfilePage>
                       subtitle,
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey[600],
+                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                       ),
                     ),
                   ],
@@ -750,13 +742,366 @@ class _ProfilePageState extends State<ProfilePage>
               ),
               Icon(
                 Icons.arrow_forward_ios,
-                color: Colors.grey[400],
+                color: isDarkMode ? Colors.grey[600] : Colors.grey[400],
                 size: 16,
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  // New method for Dark Mode toggle
+  Widget _buildDarkModeOption(BuildContext context, ThemeProvider themeProvider) {
+    final isDarkMode = themeProvider.isDarkMode;
+    
+    return Card(
+      margin: EdgeInsets.only(bottom: 16),
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200),
+      ),
+      color: isDarkMode ? Color(0xFF1E1E1E) : Colors.white,
+      child: Padding(
+        padding: EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Colors.purple[600]!.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(
+                isDarkMode ? Icons.dark_mode : Icons.light_mode,
+                color: Colors.purple[600],
+                size: 24,
+              ),
+            ),
+            SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Appearance",
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode ? Colors.white : Colors.grey[800],
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    "Dark mode",
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Switch(
+              value: isDarkMode,
+              onChanged: (_) {
+                themeProvider.toggleTheme();
+              },
+              activeColor: Colors.purple[600],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAccountSettingsDialog() {
+    final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+    final isDarkMode = themeProvider.isDarkMode;
+    
+    // Set the initial name
+    nameController.text = _userName;
+    
+    // Clear password controllers
+    currentPasswordController.clear();
+    newPasswordController.clear();
+    confirmPasswordController.clear();
+    
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) {
+          return Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Container(
+              width: double.maxFinite,
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.8,
+              ),
+              padding: EdgeInsets.all(16),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Account Settings",
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.white : Colors.black87,
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close),
+                          onPressed: () => Navigator.of(context).pop(),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 16),
+                    
+                    // Name Section
+                    Text(
+                      "Display Name",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: isDarkMode ? Color(0xFF2C2C2C) : Colors.grey[100],
+                        hintText: "Enter your name",
+                        hintStyle: TextStyle(
+                          color: isDarkMode ? Colors.grey[400] : null,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      ),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isUpdatingName ? null : () async {
+                          if (nameController.text.trim().isEmpty) {
+                            _showMessage('Name cannot be empty');
+                            return;
+                          }
+                          
+                          setState(() {
+                            _isUpdatingName = true;
+                          });
+                          
+                          try {
+                            // Update name in Firestore
+                            await _firestoreService.updateUserProfile(
+                              name: nameController.text.trim(),
+                            );
+                            
+                            // Update local state
+                            this.setState(() {
+                              _userName = nameController.text.trim();
+                            });
+                            
+                            _showMessage('Name updated successfully');
+                          } catch (e) {
+                            _showMessage('Error updating name: $e');
+                          } finally {
+                            setState(() {
+                              _isUpdatingName = false;
+                            });
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isDarkMode ? Colors.blue[700] : Colors.blue,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          disabledBackgroundColor: isDarkMode 
+                              ? Colors.blue[900]!.withOpacity(0.6) 
+                              : Colors.blue.withOpacity(0.6),
+                        ),
+                        child: _isUpdatingName
+                            ? SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor:
+                                      AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : Text("Update Name", style: TextStyle(fontSize: 16)),
+                      ),
+                    ),
+                    
+                    Divider(height: 32, thickness: 1, color: isDarkMode ? Colors.grey[800] : Colors.grey[200]),
+                    
+                    // Password Section
+                    Text(
+                      "Change Password",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                      ),
+                    ),
+                    SizedBox(height: 12),
+                    _buildPasswordField(
+                      controller: currentPasswordController,
+                      label: "Current Password",
+                      isDarkMode: isDarkMode,
+                    ),
+                    SizedBox(height: 12),
+                    _buildPasswordField(
+                      controller: newPasswordController,
+                      label: "New Password",
+                      isDarkMode: isDarkMode,
+                    ),
+                    SizedBox(height: 12),
+                    _buildPasswordField(
+                      controller: confirmPasswordController,
+                      label: "Confirm New Password",
+                      isDarkMode: isDarkMode,
+                    ),
+                    SizedBox(height: 16),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: _isUpdatingPassword ? null : () async {
+                          if (currentPasswordController.text.isEmpty ||
+                              newPasswordController.text.isEmpty ||
+                              confirmPasswordController.text.isEmpty) {
+                            _showMessage('All password fields are required');
+                            return;
+                          }
+
+                          if (newPasswordController.text != confirmPasswordController.text) {
+                            _showMessage('New passwords do not match');
+                            return;
+                          }
+
+                          setState(() {
+                            _isUpdatingPassword = true;
+                          });
+
+                          try {
+                            User? user = _auth.currentUser;
+                            if (user != null && user.email != null) {
+                              // Reauthenticate user first
+                              AuthCredential credential = EmailAuthProvider.credential(
+                                email: user.email!,
+                                password: currentPasswordController.text,
+                              );
+
+                              await user.reauthenticateWithCredential(credential);
+                              await user.updatePassword(newPasswordController.text);
+
+                              _showMessage('Password updated successfully');
+
+                              // Clear password fields
+                              currentPasswordController.clear();
+                              newPasswordController.clear();
+                              confirmPasswordController.clear();
+                            }
+                          } catch (e) {
+                            _showMessage('Error updating password: $e');
+                          } finally {
+                            setState(() {
+                              _isUpdatingPassword = false;
+                            });
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: isDarkMode ? Colors.blue[700] : Colors.blue,
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          disabledBackgroundColor: isDarkMode 
+                              ? Colors.blue[900]!.withOpacity(0.6) 
+                              : Colors.blue.withOpacity(0.6),
+                        ),
+                        child: _isUpdatingPassword
+                            ? SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor:
+                                      AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : Text("Update Password",
+                                style: TextStyle(fontSize: 16)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+      ),
+    );
+  }
+
+  Widget _buildPasswordField({
+    required TextEditingController controller,
+    required String label,
+    required bool isDarkMode,
+  }) {
+    return TextField(
+      controller: controller,
+      obscureText: true,
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: isDarkMode ? Color(0xFF2C2C2C) : Colors.grey[100],
+        hintText: label,
+        hintStyle: TextStyle(
+          color: isDarkMode ? Colors.grey[400] : null,
+        ),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      ),
+      style: TextStyle(
+        fontSize: 16, 
+        color: isDarkMode ? Colors.white : Colors.black87,
+      ),
+    );
+  }
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 }

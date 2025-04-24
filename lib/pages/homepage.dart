@@ -9,6 +9,8 @@ import 'package:translation_app/pages/history_page.dart';
 import 'package:translation_app/services/firestore_service.dart';
 import 'package:translation_app/models/avatar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:provider/provider.dart';
+import 'package:translation_app/utils/theme_provider.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -60,8 +62,7 @@ class _HomePageState extends State<HomePage> {
       case 1:
         return SubscriptionPage(languageCode: 'en');
       case 2:
-        // We're handling ProfilePage navigation in _onItemTapped
-        return Container(); // Placeholder, won't be used
+        return ProfilePage();
       default:
         return HomeContent(
             userName: _userName, avatarId: _avatarId, isLoading: _isLoading);
@@ -69,29 +70,14 @@ class _HomePageState extends State<HomePage> {
   }
 
   void _onItemTapped(int index) {
-    // Handle profile page navigation separately
-    if (index == 2) {
-      Navigator.of(context)
-          .push(MaterialPageRoute(builder: (context) => ProfilePage()))
-          .then((shouldRefresh) {
-        // Refresh user data when returning from ProfilePage with refresh signal
-        if (shouldRefresh == true) {
-          _loadUserData();
-        }
-      });
-      return;
-    }
+    // Handle all tab navigations within the main page
+    setState(() {
+      _selectedIndex = index;
+    });
 
-    // Handle other tab navigations
-    if (_selectedIndex != index) {
-      setState(() {
-        _selectedIndex = index;
-      });
-
-      // If navigating to HomePage, refresh user data
-      if (index == 0) {
-        _loadUserData();
-      }
+    // If navigating to HomePage, refresh user data
+    if (index == 0) {
+      _loadUserData();
     }
   }
 
@@ -126,17 +112,21 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    // Get the theme provider
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+
     return Scaffold(
       appBar: AppBar(
         elevation: 0,
-        backgroundColor: Colors.white,
+        backgroundColor: isDarkMode ? Color(0xFF121212) : Colors.white,
         title: Text(
           "SpeakWise",
           style: TextStyle(
             fontFamily: 'BerlinSansFBDemi',
             fontSize: 26,
             fontWeight: FontWeight.bold,
-            color: Colors.blue[700],
+            color: isDarkMode ? Colors.blue[400] : Colors.blue[700],
           ),
         ),
         centerTitle: true,
@@ -144,21 +134,21 @@ class _HomePageState extends State<HomePage> {
       body: _getPage(_selectedIndex),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: isDarkMode ? Color(0xFF121212) : Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black12,
+              color: isDarkMode ? Colors.black26 : Colors.black12,
               blurRadius: 10,
               spreadRadius: 0,
             ),
           ],
         ),
         child: BottomNavigationBar(
-          items: _getNavigationBarItems(),
+          items: _getNavigationBarItems(isDarkMode),
           currentIndex: _selectedIndex,
-          selectedItemColor: Colors.blue[700],
-          unselectedItemColor: Colors.grey[400],
-          backgroundColor: Colors.white,
+          selectedItemColor: isDarkMode ? Colors.blue[400] : Colors.blue[700],
+          unselectedItemColor: isDarkMode ? Colors.grey[600] : Colors.grey[400],
+          backgroundColor: isDarkMode ? Color(0xFF121212) : Colors.white,
           onTap: _onItemTapped,
           type: BottomNavigationBarType.fixed,
           showSelectedLabels: true,
@@ -170,7 +160,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  List<BottomNavigationBarItem> _getNavigationBarItems() {
+  List<BottomNavigationBarItem> _getNavigationBarItems(bool isDarkMode) {
     return [
       BottomNavigationBarItem(
         icon: Padding(
@@ -179,6 +169,7 @@ class _HomePageState extends State<HomePage> {
             'assets/logo.png',
             width: 24,
             height: 24,
+            color: isDarkMode ? Colors.grey[400] : null,
           ),
         ),
         activeIcon: Padding(
@@ -187,7 +178,7 @@ class _HomePageState extends State<HomePage> {
             'assets/logo.png',
             width: 24,
             height: 24,
-            color: Colors.blue[700],
+            color: isDarkMode ? Colors.blue[400] : Colors.blue[700],
           ),
         ),
         label: 'Translate',
@@ -218,8 +209,12 @@ class HomeContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get theme context
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    
     return Container(
-      color: Colors.white,
+      color: isDarkMode ? Color(0xFF121212) : Colors.white,
       child: Column(
         children: [
           // Professional header with greeting
@@ -230,10 +225,9 @@ class HomeContent extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Colors.blue[600]!,
-                  Colors.blue[800]!,
-                ],
+                colors: isDarkMode 
+                  ? [Color(0xFF1A237E), Color(0xFF0D47A1)]
+                  : [Colors.blue[600]!, Colors.blue[800]!],
               ),
               borderRadius: BorderRadius.only(
                 bottomLeft: Radius.circular(20),
@@ -313,7 +307,7 @@ class HomeContent extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[700],
+                        color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
                         letterSpacing: 1.2,
                       ),
                     ),
@@ -329,7 +323,7 @@ class HomeContent extends StatelessWidget {
                           "Text to Text",
                           "Type or paste text for translation",
                           Icons.text_fields_rounded,
-                          Colors.blue[700]!,
+                          Colors.blue[isDarkMode ? 400 : 700]!,
                           () {
                             Navigator.pushReplacement(
                               context,
@@ -338,6 +332,7 @@ class HomeContent extends StatelessWidget {
                                       text_to_text.NormalPage()),
                             );
                           },
+                          isDarkMode,
                         ),
 
                         // Picture to Text
@@ -346,7 +341,7 @@ class HomeContent extends StatelessWidget {
                           "Picture to Text",
                           "Extract and translate text from images",
                           Icons.image,
-                          Colors.green[600]!,
+                          Colors.green[isDarkMode ? 400 : 600]!,
                           () {
                             Navigator.pushReplacement(
                               context,
@@ -354,6 +349,7 @@ class HomeContent extends StatelessWidget {
                                   builder: (context) => PictureToTextPage()),
                             );
                           },
+                          isDarkMode,
                         ),
 
                         // Voice to Text
@@ -362,7 +358,7 @@ class HomeContent extends StatelessWidget {
                           "Voice to Text",
                           "Speak and translate your voice",
                           Icons.mic,
-                          Colors.orange[600]!,
+                          Colors.orange[isDarkMode ? 400 : 600]!,
                           () {
                             Navigator.pushReplacement(
                               context,
@@ -370,6 +366,7 @@ class HomeContent extends StatelessWidget {
                                   builder: (context) => VoiceToTextPage()),
                             );
                           },
+                          isDarkMode,
                         ),
 
                         // Common Phrases
@@ -378,7 +375,7 @@ class HomeContent extends StatelessWidget {
                           "Common Phrases",
                           "View and use helpful translated phrases",
                           Icons.format_quote,
-                          Colors.purple[600]!,
+                          Colors.purple[isDarkMode ? 400 : 600]!,
                           () {
                             Navigator.pushReplacement(
                               context,
@@ -386,6 +383,7 @@ class HomeContent extends StatelessWidget {
                                   builder: (context) => phrases.NormalPage()),
                             );
                           },
+                          isDarkMode,
                         ),
                       ],
                     ),
@@ -406,6 +404,7 @@ class HomeContent extends StatelessWidget {
     IconData icon,
     Color color,
     VoidCallback onTap,
+    bool isDarkMode,
   ) {
     return Card(
       margin: EdgeInsets.only(bottom: 16),
@@ -414,6 +413,7 @@ class HomeContent extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
       ),
+      color: isDarkMode ? Color(0xFF1E1E1E) : Colors.white,
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
@@ -443,7 +443,7 @@ class HomeContent extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Colors.grey[800],
+                        color: isDarkMode ? Colors.white : Colors.grey[800],
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -453,7 +453,7 @@ class HomeContent extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w400,
-                        color: Colors.grey[600],
+                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                         height: 1.3,
                       ),
                     ),
@@ -464,12 +464,12 @@ class HomeContent extends StatelessWidget {
                 width: 36,
                 height: 36,
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: isDarkMode ? Color(0xFF2C2C2C) : Colors.grey[100],
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(
                   Icons.arrow_forward,
-                  color: Colors.grey[500],
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
                   size: 18,
                 ),
               ),

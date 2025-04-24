@@ -4,6 +4,8 @@ import 'package:translator/translator.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
+import 'package:translation_app/utils/theme_provider.dart';
 
 class NormalPage extends StatefulWidget {
   @override
@@ -383,148 +385,12 @@ class _NormalPageState extends State<NormalPage> {
     });
   }
 
-  Widget _buildPhraseCategory(String category) {
-    final phrases = _phraseCategories[category]!;
-    final translatedPhrases = _translatedCategoryPhrases[category] ?? {};
-
-    return ExpansionTile(
-      title: Text(
-        category,
-        style: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
-      ),
-      children: phrases.map((phrase) {
-        final translatedPhrase = translatedPhrases[phrase] ?? '...';
-
-        return Card(
-          margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-          child: Container(
-            width: double.infinity,
-            padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  phrase,
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue[800],
-                    fontSize: 15,
-                  ),
-                  overflow: TextOverflow.visible,
-                ),
-                SizedBox(height: 6),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        translatedPhrase,
-                        style: TextStyle(
-                          color: Colors.black87,
-                          fontSize: 14,
-                        ),
-                        overflow: TextOverflow.visible,
-                      ),
-                    ),
-                    SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: () => _speakPhrase(translatedPhrase),
-                      child: Container(
-                        padding: EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.blue[50],
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.volume_up,
-                          size: 20,
-                          color: Colors.blue[800],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildProgressIndicator() {
-    int totalPhrases = 0;
-    int translatedPhrases = 0;
-
-    // Count total phrases
-    _phraseCategories.forEach((category, phrases) {
-      totalPhrases += phrases.length;
-    });
-
-    // Count translated phrases
-    _translatedCategoryPhrases.forEach((category, phrases) {
-      translatedPhrases += phrases.length;
-    });
-
-    // Calculate progress
-    double progress = totalPhrases > 0 ? translatedPhrases / totalPhrases : 0.0;
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        CircularProgressIndicator(value: progress),
-        SizedBox(height: 20),
-        Text(
-          "Translating phrases... (${(progress * 100).toInt()}%)",
-          style: TextStyle(fontSize: 16),
-        ),
-        Text(
-          "$translatedPhrases of $totalPhrases phrases",
-          style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-        ),
-        Text(
-          "From: ${_getLanguageName(_sourceLanguage)} To: ${_getLanguageName(_selectedLanguage)}",
-          style: TextStyle(fontSize: 14, color: Colors.blue[600]),
-        ),
-      ],
-    );
-  }
-
-  // Update phrases display for non-English source languages
-  Future<void> _updatePhrasesForSourceLanguage() async {
-    // Only do this when switching to a non-English source language
-    if (_sourceLanguage == 'en') return;
-
-    // Temporarily translate English phrases to source language for display
-    for (String category in _originalEnglishPhrases.keys) {
-      final List<String> englishPhrases = _originalEnglishPhrases[category]!;
-      List<String> translatedPhrases = [];
-
-      for (String phrase in englishPhrases) {
-        try {
-          var translation = await translator.translate(
-            phrase,
-            from: 'en',
-            to: _sourceLanguage,
-          );
-          translatedPhrases.add(translation.text);
-        } catch (e) {
-          print("Error translating to source language: $e");
-          translatedPhrases.add(phrase); // Keep original on error
-        }
-      }
-
-      setState(() {
-        _phraseCategories[category] = translatedPhrases;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    // Get theme context
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    
     return WillPopScope(
       onWillPop: () async {
         Navigator.pushReplacement(
@@ -534,12 +400,12 @@ class _NormalPageState extends State<NormalPage> {
         return false;
       },
       child: Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: isDarkMode ? Color(0xFF121212) : Colors.white,
         appBar: AppBar(
-          backgroundColor: Colors.white,
+          backgroundColor: isDarkMode ? Color(0xFF121212) : Colors.white,
           elevation: 0,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back, color: Colors.blue),
+            icon: Icon(Icons.arrow_back, color: isDarkMode ? Colors.blue[400] : Colors.blue),
             onPressed: () {
               Navigator.pushReplacement(
                 context,
@@ -552,7 +418,7 @@ class _NormalPageState extends State<NormalPage> {
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.bold,
-              color: Colors.blue,
+              color: isDarkMode ? Colors.blue[400] : Colors.blue,
             ),
           ),
           centerTitle: true,
@@ -561,7 +427,7 @@ class _NormalPageState extends State<NormalPage> {
           children: [
             Container(
               padding: EdgeInsets.all(16),
-              color: Colors.blue[50],
+              color: isDarkMode ? Color(0xFF1E1E1E) : Colors.blue[50],
               child: Column(
                 children: [
                   Text(
@@ -569,6 +435,7 @@ class _NormalPageState extends State<NormalPage> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
+                      color: isDarkMode ? Colors.white : Colors.black87,
                     ),
                   ),
                   SizedBox(height: 10),
@@ -582,11 +449,18 @@ class _NormalPageState extends State<NormalPage> {
                           decoration: InputDecoration(
                             border: OutlineInputBorder(),
                             labelText: "From",
+                            labelStyle: TextStyle(
+                              color: isDarkMode ? Colors.grey[400] : null,
+                            ),
                             contentPadding: EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 10),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: isDarkMode ? Color(0xFF2C2C2C) : Colors.white,
                           ),
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black87,
+                          ),
+                          dropdownColor: isDarkMode ? Color(0xFF2C2C2C) : Colors.white,
                           items: languages.entries
                               .where(
                                   (entry) => entry.value != _selectedLanguage)
@@ -622,7 +496,7 @@ class _NormalPageState extends State<NormalPage> {
                       ),
                       Container(
                         padding: EdgeInsets.symmetric(horizontal: 10),
-                        child: Icon(Icons.arrow_forward, color: Colors.blue),
+                        child: Icon(Icons.arrow_forward, color: isDarkMode ? Colors.blue[400] : Colors.blue),
                       ),
                       Expanded(
                         child: DropdownButtonFormField<String>(
@@ -632,11 +506,18 @@ class _NormalPageState extends State<NormalPage> {
                           decoration: InputDecoration(
                             border: OutlineInputBorder(),
                             labelText: "To",
+                            labelStyle: TextStyle(
+                              color: isDarkMode ? Colors.grey[400] : null,
+                            ),
                             contentPadding: EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 10),
                             filled: true,
-                            fillColor: Colors.white,
+                            fillColor: isDarkMode ? Color(0xFF2C2C2C) : Colors.white,
                           ),
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black87,
+                          ),
+                          dropdownColor: isDarkMode ? Color(0xFF2C2C2C) : Colors.white,
                           items: languages.entries
                               .where((entry) => entry.value != _sourceLanguage)
                               .map((entry) {
@@ -688,5 +569,166 @@ class _NormalPageState extends State<NormalPage> {
         ),
       ),
     );
+  }
+  
+  Widget _buildProgressIndicator() {
+    // Get theme context
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    
+    int totalPhrases = 0;
+    int translatedPhrases = 0;
+
+    // Count total phrases
+    _phraseCategories.forEach((category, phrases) {
+      totalPhrases += phrases.length;
+    });
+
+    // Count translated phrases
+    _translatedCategoryPhrases.forEach((category, phrases) {
+      translatedPhrases += phrases.length;
+    });
+
+    // Calculate progress
+    double progress = totalPhrases > 0 ? translatedPhrases / totalPhrases : 0.0;
+
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        CircularProgressIndicator(value: progress),
+        SizedBox(height: 20),
+        Text(
+          "Translating phrases... (${(progress * 100).toInt()}%)",
+          style: TextStyle(
+            fontSize: 16,
+            color: isDarkMode ? Colors.white : Colors.black87,
+          ),
+        ),
+        Text(
+          "$translatedPhrases of $totalPhrases phrases",
+          style: TextStyle(
+            fontSize: 14, 
+            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          ),
+        ),
+        Text(
+          "From: ${_getLanguageName(_sourceLanguage)} To: ${_getLanguageName(_selectedLanguage)}",
+          style: TextStyle(
+            fontSize: 14, 
+            color: isDarkMode ? Colors.blue[400] : Colors.blue[600],
+          ),
+        ),
+      ],
+    );
+  }
+  
+  Widget _buildPhraseCategory(String category) {
+    // Get theme context
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    
+    final phrases = _phraseCategories[category]!;
+    final translatedPhrases = _translatedCategoryPhrases[category] ?? {};
+
+    return ExpansionTile(
+      title: Text(
+        category,
+        style: TextStyle(
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+          color: isDarkMode ? Colors.white : Colors.black87,
+        ),
+      ),
+      iconColor: isDarkMode ? Colors.blue[400] : Colors.blue[700],
+      collapsedIconColor: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+      children: phrases.map((phrase) {
+        final translatedPhrase = translatedPhrases[phrase] ?? '...';
+
+        return Card(
+          margin: EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+          color: isDarkMode ? Color(0xFF1E1E1E) : Colors.white,
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  phrase,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.blue[400] : Colors.blue[800],
+                    fontSize: 15,
+                  ),
+                  overflow: TextOverflow.visible,
+                ),
+                SizedBox(height: 6),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        translatedPhrase,
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white : Colors.black87,
+                          fontSize: 14,
+                        ),
+                        overflow: TextOverflow.visible,
+                      ),
+                    ),
+                    SizedBox(width: 8),
+                    GestureDetector(
+                      onTap: () => _speakPhrase(translatedPhrase),
+                      child: Container(
+                        padding: EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? Colors.blue[900]!.withOpacity(0.3) : Colors.blue[50],
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.volume_up,
+                          size: 20,
+                          color: isDarkMode ? Colors.blue[400] : Colors.blue[800],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
+  // Update phrases display for non-English source languages
+  Future<void> _updatePhrasesForSourceLanguage() async {
+    // Only do this when switching to a non-English source language
+    if (_sourceLanguage == 'en') return;
+
+    // Temporarily translate English phrases to source language for display
+    for (String category in _originalEnglishPhrases.keys) {
+      final List<String> englishPhrases = _originalEnglishPhrases[category]!;
+      List<String> translatedPhrases = [];
+
+      for (String phrase in englishPhrases) {
+        try {
+          var translation = await translator.translate(
+            phrase,
+            from: 'en',
+            to: _sourceLanguage,
+          );
+          translatedPhrases.add(translation.text);
+        } catch (e) {
+          print("Error translating to source language: $e");
+          translatedPhrases.add(phrase); // Keep original on error
+        }
+      }
+
+      setState(() {
+        _phraseCategories[category] = translatedPhrases;
+      });
+    }
   }
 }

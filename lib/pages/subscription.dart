@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:translator/translator.dart';
+import 'package:provider/provider.dart';
+import 'package:translation_app/utils/theme_provider.dart';
 
 class SubscriptionPage extends StatefulWidget {
   final String languageCode;
@@ -51,16 +53,19 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? Color(0xFF121212) : Colors.white,
       appBar: AppBar(
         automaticallyImplyLeading: false,
-        backgroundColor: Colors.white,
+        backgroundColor: isDarkMode ? Color(0xFF121212) : Colors.white,
         elevation: 0,
         title: Text(
-          "SpeakWise",
+          "Premium",
           style: TextStyle(
-            color: Colors.blue.shade800,
+            color: isDarkMode ? Colors.blue[400] : Colors.blue[800],
             fontWeight: FontWeight.bold,
             fontSize: 22,
           ),
@@ -72,12 +77,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(Icons.language, size: 50, color: Colors.black),
-            SizedBox(height: 10),
             Text(
               translatedTagline.isEmpty ? "Translating..." : translatedTagline,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 18, 
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : Colors.black87
+              ),
             ),
             SizedBox(height: 20),
             Expanded(
@@ -86,12 +93,14 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   _buildSubscriptionCard(
                     title: translatedSilver,
                     description: translatedSilverDescription.isEmpty ? "Translating..." : translatedSilverDescription,
-                    color: Colors.grey.shade300,
+                    color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+                    isDarkMode: isDarkMode,
                   ),
                   _buildSubscriptionCard(
                     title: translatedGold,
                     description: translatedGoldDescription.isEmpty ? "Translating..." : translatedGoldDescription,
-                    color: Colors.amber.shade600,
+                    color: isDarkMode ? Colors.amber.shade800 : Colors.amber.shade600,
+                    isDarkMode: isDarkMode,
                   ),
                 ],
               ),
@@ -107,7 +116,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                 Navigator.pushReplacementNamed(context, '/main_app');
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: selectedPlan == null ? Colors.grey : Colors.blue.shade700,
+                backgroundColor: selectedPlan == null 
+                    ? (isDarkMode ? Colors.grey.shade800 : Colors.grey) 
+                    : (isDarkMode ? Colors.blue.shade700 : Colors.blue.shade700),
                 padding: EdgeInsets.symmetric(vertical: 14, horizontal: 50),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
@@ -125,7 +136,10 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
               },
               child: Text(
                 translatedSkipSubscription,
-                style: TextStyle(fontSize: 16, color: Colors.red),
+                style: TextStyle(
+                  fontSize: 16, 
+                  color: isDarkMode ? Colors.red.shade400 : Colors.red
+                ),
               ),
             ),
           ],
@@ -138,6 +152,7 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
     required String title,
     required String description,
     required Color color,
+    required bool isDarkMode,
   }) {
     bool isSelected = selectedPlan == title;
 
@@ -151,7 +166,9 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
         margin: EdgeInsets.symmetric(vertical: 8),
         elevation: 2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        color: isSelected ? color.withOpacity(0.6) : Colors.white,
+        color: isSelected 
+            ? color.withOpacity(0.6) 
+            : (isDarkMode ? Color(0xFF1E1E1E) : Colors.white),
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
@@ -168,14 +185,17 @@ class _SubscriptionPageState extends State<SubscriptionPage> {
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: isDarkMode ? Colors.white : Colors.white,
                   ),
                 ),
               ),
               SizedBox(height: 10),
               Text(
                 description,
-                style: TextStyle(fontSize: 14),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: isDarkMode ? Colors.white : Colors.black87,
+                ),
               ),
             ],
           ),

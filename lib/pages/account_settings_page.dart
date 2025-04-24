@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:translation_app/services/firestore_service.dart';
+import 'package:provider/provider.dart';
+import 'package:translation_app/utils/theme_provider.dart';
 
 class AccountSettingsPage extends StatefulWidget {
   final String initialName;
@@ -45,11 +47,20 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Get theme context
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    final isDarkMode = themeProvider.isDarkMode;
+    
     return Scaffold(
       appBar: AppBar(
-        title: Text("Account"),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        title: Text(
+          "Account",
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black87
+          ),
+        ),
+        backgroundColor: isDarkMode ? Color(0xFF121212) : Colors.white,
+        foregroundColor: isDarkMode ? Colors.white : Colors.black87,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
@@ -57,7 +68,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
           onPressed: () => Navigator.of(context).pop(),
         ),
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: isDarkMode ? Color(0xFF121212) : Colors.white,
       body: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -73,7 +84,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: Colors.black87,
+                      color: isDarkMode ? Colors.white : Colors.black87,
                     ),
                   ),
                   SizedBox(height: 16),
@@ -81,8 +92,11 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                     controller: nameController,
                     decoration: InputDecoration(
                       filled: true,
-                      fillColor: Colors.grey[100],
+                      fillColor: isDarkMode ? Color(0xFF2C2C2C) : Colors.grey[100],
                       hintText: "Enter your name",
+                      hintStyle: TextStyle(
+                        color: isDarkMode ? Colors.grey[400] : null,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide.none,
@@ -90,7 +104,10 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                       contentPadding:
                           EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                     ),
-                    style: TextStyle(fontSize: 16),
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: isDarkMode ? Colors.white : Colors.black87,
+                    ),
                   ),
                   SizedBox(height: 20),
                   SizedBox(
@@ -98,14 +115,16 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                     child: ElevatedButton(
                       onPressed: _isUpdatingName ? null : _updateName,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: isDarkMode ? Colors.blue[700] : Colors.blue,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        disabledBackgroundColor: Colors.blue.withOpacity(0.6),
+                        disabledBackgroundColor: isDarkMode 
+                            ? Colors.blue[900]!.withOpacity(0.6) 
+                            : Colors.blue.withOpacity(0.6),
                       ),
                       child: _isUpdatingName
                           ? SizedBox(
@@ -124,7 +143,7 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
               ),
             ),
 
-            Divider(height: 1, thickness: 1, color: Colors.grey[200]),
+            Divider(height: 1, thickness: 1, color: isDarkMode ? Colors.grey[800] : Colors.grey[200]),
 
             // Password Section
             Container(
@@ -137,23 +156,26 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w500,
-                      color: Colors.black87,
+                      color: isDarkMode ? Colors.white : Colors.black87,
                     ),
                   ),
                   SizedBox(height: 16),
                   _buildPasswordField(
                     controller: currentPasswordController,
                     label: "Current Password",
+                    isDarkMode: isDarkMode,
                   ),
                   SizedBox(height: 16),
                   _buildPasswordField(
                     controller: newPasswordController,
                     label: "New Password",
+                    isDarkMode: isDarkMode,
                   ),
                   SizedBox(height: 16),
                   _buildPasswordField(
                     controller: confirmPasswordController,
                     label: "Confirm New Password",
+                    isDarkMode: isDarkMode,
                   ),
                   SizedBox(height: 20),
                   SizedBox(
@@ -161,14 +183,16 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
                     child: ElevatedButton(
                       onPressed: _isUpdatingPassword ? null : _updatePassword,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: isDarkMode ? Colors.blue[700] : Colors.blue,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         padding: EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        disabledBackgroundColor: Colors.blue.withOpacity(0.6),
+                        disabledBackgroundColor: isDarkMode 
+                            ? Colors.blue[900]!.withOpacity(0.6) 
+                            : Colors.blue.withOpacity(0.6),
                       ),
                       child: _isUpdatingPassword
                           ? SizedBox(
@@ -196,21 +220,28 @@ class _AccountSettingsPageState extends State<AccountSettingsPage> {
   Widget _buildPasswordField({
     required TextEditingController controller,
     required String label,
+    required bool isDarkMode,
   }) {
     return TextField(
       controller: controller,
       obscureText: true,
       decoration: InputDecoration(
         filled: true,
-        fillColor: Colors.grey[100],
+        fillColor: isDarkMode ? Color(0xFF2C2C2C) : Colors.grey[100],
         hintText: label,
+        hintStyle: TextStyle(
+          color: isDarkMode ? Colors.grey[400] : null,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
         ),
         contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
-      style: TextStyle(fontSize: 16),
+      style: TextStyle(
+        fontSize: 16, 
+        color: isDarkMode ? Colors.white : Colors.black87,
+      ),
     );
   }
 

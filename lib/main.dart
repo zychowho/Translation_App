@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import 'package:translation_app/login/login.dart';
 import 'package:translation_app/pages/profilepage.dart';
 import 'package:translation_app/register/register.dart';
@@ -13,6 +14,7 @@ import 'package:translation_app/pages/homepage.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:translation_app/services/firebase_config.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:translation_app/utils/theme_provider.dart';
 
 void main() async {
   // Ensure Flutter is initialized
@@ -58,10 +60,15 @@ void main() async {
   }
 
   // Run the app with the determined state
-  runApp(MyApp(
-    hasSeenOnboarding: hasSeenOnboarding,
-    firebaseInitialized: firebaseInitialized,
-  ));
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: MyApp(
+        hasSeenOnboarding: hasSeenOnboarding,
+        firebaseInitialized: firebaseInitialized,
+      ),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -77,6 +84,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Get the current theme provider
+    final themeProvider = Provider.of<ThemeProvider>(context);
+    
     // Default to home screen if Firebase isn't initialized
     String initialRoute = '/home';
 
@@ -93,10 +103,9 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       title: 'Translation App',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      theme: themeProvider.lightTheme,
+      darkTheme: themeProvider.darkTheme,
+      themeMode: themeProvider.themeMode,
       debugShowCheckedModeBanner: false,
       initialRoute: initialRoute,
       routes: {
